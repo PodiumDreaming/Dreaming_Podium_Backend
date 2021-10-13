@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from app import Model
 
 
 router = APIRouter(
@@ -44,21 +45,6 @@ fake_users_db = {
 }
 
 
-class User(BaseModel):
-    name: str
-    gender: str
-    birthday: Optional[datetime] = None
-    user_id: str
-    team: Optional[str] = None
-    field: Optional[str] = None
-    acc_type: str
-    email: Optional[str] = None
-
-
-class UserFull(User):
-    password: str
-
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -69,8 +55,6 @@ class TokenData(BaseModel):
 
 
 def verify_password(plain_password, hashed_password):
-    print(plain_password)
-    print(hashed_password)
     return pwd_context.verify(plain_password, hashed_password)
 
 
@@ -83,7 +67,7 @@ def get_user(db, username: str):
     #check if id in db
     if username in db:
         user_info = db[username]
-        return UserFull(**user_info)
+        return Model.UserFull(**user_info)
 
 
 def authenticate_user(fake_db, username: str, password: str):
@@ -133,8 +117,8 @@ def check_type(acc_type):
         return False
 
 
-@router.get("/users/me", response_model=User)
-async def login_test(current_user: User = Depends(get_current_user)):
+@router.get("/users/me", response_model=Model.User)
+async def login_test(current_user: Model.User = Depends(get_current_user)):
     return current_user
 
 
