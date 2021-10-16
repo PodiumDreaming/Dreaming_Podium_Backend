@@ -3,9 +3,13 @@ from typing import Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from .. import Model
+from ..config.config import kakao_client, callback_url
+from ..database import crud
+import requests
 
 
 router = APIRouter(
@@ -117,7 +121,7 @@ def check_type(acc_type):
         return False
 
 
-@router.get("/users/me", response_model=Model.User)
+@router.get("/me", response_model=Model.User)
 async def login_test(current_user: Model.User = Depends(get_current_user)):
     return current_user
 
@@ -138,4 +142,20 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+@router.get("/kakao/login", response_class=RedirectResponse)
+async def kakao_login():
+    auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={kakao_client}&redirect_uri={callback_url}&response_type=code"
+    return RedirectResponse(auth_url)
 
+
+@router.get("/kakao/callback")
+async def info(code):
+    if code:
+        token_url = f"https://kauth.kakao.com/oauth/token?" \
+                    f"grant_type=authorization_code&client_id={kakao_client}&redirect_uri={callback_url}&code={code}"
+        token_rq = requests.post(token_url)
+        token = token_rq.json()
+        if token.get("access_token", None) is not None:
+            return {"my token": token["access_token"]}
+        else:
+            return {"error": "Failed to get access token."}
