@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from jose import JWTError, jwt
@@ -66,14 +66,6 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(db, username: str):
-    #db 연결
-    #check if id in db
-    if username in db:
-        user_info = db[username]
-        return Model.UserFull(**user_info)
-
-
 def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
     if not user:
@@ -81,6 +73,14 @@ def authenticate_user(fake_db, username: str, password: str):
     if not verify_password(password, user.password):
         return False
     return user
+
+
+def get_user(db, username: str):
+    #db 연결
+    #check if id in db
+    if username in db:
+        user_info = db[username]
+        return Model.UserFull(**user_info)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -121,6 +121,28 @@ def check_type(acc_type):
         return False
 
 
+def kakao_signin(info):
+    kakao_account = info.get("kakao_account")
+    profile = kakao_account.get("profile")
+
+    user_id = info.get("id", None)
+    name = profile.get("nickname", None)
+    gender = kakao_account.get("gender", None)
+    email = kakao_account.get("email", None)
+    reg_date =  info.get("connected_at", None)
+    acc_type = "KAKAO"
+
+    user = {
+        "user_id": user_id,
+        "name": name,
+        "gender": gender,
+        "email": email,
+        "register_date": reg_date,
+        "acc_type": acc_type,
+    }
+    return Model.User(**user)
+
+
 @router.get("/me", response_model=Model.User)
 async def login_test(current_user: Model.User = Depends(get_current_user)):
     return current_user
@@ -142,20 +164,31 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/kakao/login", response_class=RedirectResponse)
+@router.get("/kakao/login")
 async def kakao_login():
     auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={kakao_client}&redirect_uri={callback_url}&response_type=code"
     return RedirectResponse(auth_url)
 
 
 @router.get("/kakao/callback")
-async def info(code):
+async def get_token(code):
     if code:
         token_url = f"https://kauth.kakao.com/oauth/token?" \
                     f"grant_type=authorization_code&client_id={kakao_client}&redirect_uri={callback_url}&code={code}"
         token_rq = requests.post(token_url)
         token = token_rq.json()
-        if token.get("access_token", None) is not None:
-            return {"my token": token["access_token"]}
+        access_token = token.get("access_token", None)
+        if access_token is not None:
+            info_rq = requests.get("https://kapi.kakao.com/v2/user/me",
+                                      headers={"Authorization": f"Bearer {access_token}"})
+            info = info_rq.json()
+            user = kakao_signin(info)
+            return user
         else:
             return {"error": "Failed to get access token."}
+
+
+@router.get("/kakao/form")
+async def get_info(info: dict = Body(...)):
+    #get kakao profile info using access token
+    pass
