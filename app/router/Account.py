@@ -11,7 +11,6 @@ from ..config.config import kakao_client, callback_url
 from ..database import crud
 import requests
 
-
 router = APIRouter(
     tags=["account"],
     dependencies=[],
@@ -76,8 +75,8 @@ def authenticate_user(fake_db, username: str, password: str):
 
 
 def get_user(db, username: str):
-    #db 연결
-    #check if id in db
+    # db 연결
+    # check if id in db
     if username in db:
         user_info = db[username]
         return Model.UserFull(**user_info)
@@ -124,15 +123,24 @@ def check_type(acc_type):
 def kakao_signin(info):
     kakao_account = info.get("kakao_account")
     profile = kakao_account.get("profile")
+    """
+    Check if user already exists in database.
+    If so, then create user instance with the information in database.
+    Otherwise, create new record in database and make user instance with that information.
+    Then create a jwt token base on the user instance.
+    """
+
+    """some db codes to check user data"""
 
     user_id = info.get("id", None)
     name = profile.get("nickname", None)
     gender = kakao_account.get("gender", None)
     email = kakao_account.get("email", None)
-    reg_date =  info.get("connected_at", None)
+    reg_date = info.get("connected_at", None)
     acc_type = "KAKAO"
+    password = get_password_hash(user_id)
 
-    user = {
+    data = {
         "user_id": user_id,
         "name": name,
         "gender": gender,
@@ -140,7 +148,10 @@ def kakao_signin(info):
         "register_date": reg_date,
         "acc_type": acc_type,
     }
-    return Model.User(**user)
+    user = Model.User(**data)
+    user_db = Model.UserFull(**data, password=password)
+
+    return {"access_token": user, "token_type": "bearer"}
 
 
 @router.get("/me", response_model=Model.User)
@@ -170,7 +181,7 @@ async def kakao_login():
     return RedirectResponse(auth_url)
 
 
-@router.get("/kakao/callback")
+@router.get("/kakao/callback", response_model=Token)
 async def get_token(code):
     if code:
         token_url = f"https://kauth.kakao.com/oauth/token?" \
@@ -180,15 +191,18 @@ async def get_token(code):
         access_token = token.get("access_token", None)
         if access_token is not None:
             info_rq = requests.get("https://kapi.kakao.com/v2/user/me",
-                                      headers={"Authorization": f"Bearer {access_token}"})
+                                   headers={"Authorization": f"Bearer {access_token}"})
             info = info_rq.json()
-            user = kakao_signin(info)
-            return user
+            return kakao_signin(info)
         else:
-            return {"error": "Failed to get access token."}
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Failed to Authorization from Kakao",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
 
 @router.get("/kakao/form")
 async def get_info(info: dict = Body(...)):
-    #get kakao profile info using access token
+    # get kakao profile info using access token
     pass
