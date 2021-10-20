@@ -1,7 +1,9 @@
-from ..Model import User, UserFull
+from . import Models, Tables
+from sqlalchemy.orm import Session
 
 
-def create_user(user: UserFull):
+def create_user(db: Session, user: Models.UserFull):
+    """
     data = user.dict()
     name = data["name"]
     gender = data["gender"]
@@ -11,8 +13,16 @@ def create_user(user: UserFull):
     email = data["email"]
     register_date = data["register_data"]
     acc_type = data["acc_type"]
+    """
+
     # a command to create a record in db(params)
-    return {"User": user}
+
+    user_record = Tables.User(user_id=user.user_id, name=user.name, gender=user.gender, birthday=user.birthday,
+                              team=user.team, field=user.field, email=user.email, reg_date=user.register_date,
+                              acc_type=user.acc_type, password=user.password, refresh_token=user.refresh_token)
+    db.add(user_record)
+    db.commit()
+    db.refresh(user_record)
 
 
 def read_user():

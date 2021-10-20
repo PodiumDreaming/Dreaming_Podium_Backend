@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.router import Account, Conditioning, Training
+from app.database import Tables
+from app.database.conn import engine
 
 
 def init_app():
@@ -25,7 +27,7 @@ def init_app():
         allow_methods=["*"],
         allow_headers=["*"]
     )
-
+    Tables.Base.metadata.create_all(bind=engine)
     return app
 
 

@@ -13,6 +13,7 @@ class User(BaseModel):
     email: 이메일 주소
     register_date: 가입일
     acc_type: 가입 유형
+    refresh_token: access_token 만료전에 재발급에 사용되는 토큰
     """
     user_id: str
     name: str
@@ -24,9 +25,13 @@ class User(BaseModel):
     register_date: datetime
     acc_type: str
 
+    class Config:
+        orm_mode = True
+
 
 class UserFull(User):
     password: str
+    refresh_token: str
 
 
 class Record(BaseModel):
@@ -38,7 +43,12 @@ class Record(BaseModel):
 class Training(Record):
     feedback: str
 
+    class Config:
+        orm_mode = True
+
 
 class Condition(Record):
-    pass
+
+    class Config:
+        orm_mode = True
 
