@@ -14,7 +14,7 @@ class User(Base):
     team = Column(String(255), nullable=True, default=None)
     field = Column(String(255), nullable=True, default=None)
     email = Column(String(255), nullable=True, default=None)
-    reg_date = Column(DateTime)
+    register_date = Column(DateTime)
     acc_type = Column(String(255))
     password = Column(String(255))
     refresh_token = Column(String(255))

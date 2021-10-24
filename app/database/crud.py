@@ -18,22 +18,23 @@ def create_user(db: Session, user: Models.UserFull):
     # a command to create a record in db(params)
 
     user_record = Tables.User(user_id=user.user_id, name=user.name, gender=user.gender, birthday=user.birthday,
-                              team=user.team, field=user.field, email=user.email, reg_date=user.register_date,
+                              team=user.team, field=user.field, email=user.email, register_date=user.register_date,
                               acc_type=user.acc_type, password=user.password, refresh_token=user.refresh_token)
     db.add(user_record)
     db.commit()
     db.refresh(user_record)
 
 
-def read_user():
-    pass
+def read_user(db: Session, user_id: str):
+    return db.query(Tables.User).filter(Tables.User.user_id == user_id).first()
 
 
-def update_user():
-    pass
+def update_user(db: Session, user: Models.UserFull):
+    updates = db.query(Tables.User).filter(Tables.User.user_id).update(user)
+    return True
 
 
-def delete_user():
+def delete_user(db: Session, user_id: str):
     pass
 
 

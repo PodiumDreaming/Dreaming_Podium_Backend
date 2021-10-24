@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.router import Account, Conditioning, Training
+from app.router import KaKao, Conditioning, Training
 from app.database import Tables
 from app.database.conn import engine
 
@@ -12,7 +12,7 @@ def init_app():
     app
     """
     app = FastAPI()
-    app.include_router(Account.router)
+    app.include_router(KaKao.router)
     app.include_router(Training.router)
     app.include_router(Conditioning.router)
     origins = [
