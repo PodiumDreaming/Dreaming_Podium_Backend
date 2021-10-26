@@ -47,12 +47,20 @@ def kakao_signin(info, refresh_token, db):
     return user
 
 
-@router.get("/kakao/me",response_model=Models.User)
+@router.get("/kakao/me", response_model=Models.User)
 async def get_user(user_id: str, db: Session = Depends(get_db)):
     current_user = crud.read_user(db, user_id)
     if current_user is None:
         raise HTTPException(status_code=404, detail="Could not find user")
     return current_user
+
+
+@router.delete("/kakao/quit")
+async def deleter_user(user_id: str, db: Session = Depends(get_db)):
+    if not crud.delete_user(db, user_id):
+        raise HTTPException(status_code=404, detail="Could not find user")
+    else:
+        return {"status": "200"}
 
 
 @router.get("/kakao/login")

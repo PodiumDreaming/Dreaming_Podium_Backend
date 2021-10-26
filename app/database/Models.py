@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 
@@ -18,7 +18,7 @@ class User(BaseModel):
     user_id: str
     name: str
     gender: str
-    birthday: Optional[datetime] = None
+    birthday: Optional[date] = None
     team: Optional[str] = None
     field: Optional[str] = None
     email: Optional[str] = None
@@ -36,12 +36,13 @@ class UserFull(User):
 
 class Record(BaseModel):
     user_id: str
-    date: datetime
-    content: dict
+    written: Optional[date]
+    last_modified: Optional[datetime]
+    content: Optional[dict]
 
 
 class Training(Record):
-    feedback: str
+    feedback: Optional[str]
 
     class Config:
         orm_mode = True

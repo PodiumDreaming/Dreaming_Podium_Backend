@@ -1,5 +1,6 @@
 from . import Models, Tables
 from sqlalchemy.orm import Session
+from datetime import datetime, date
 
 
 def create_user(db: Session, user: Models.UserFull):
@@ -35,23 +36,56 @@ def update_user(db: Session, user: Models.UserFull):
 
 
 def delete_user(db: Session, user_id: str):
-    pass
+    user = db.query(Tables.User).filter(Tables.User.user_id == user_id).first()
+    if user is None:
+        return False
+    else:
+        db.delete(user)
+        db.commit()
+    return True
 
 
-def create_tr():
-    pass
+def create_tr(db: Session, tr: Models.Training):
+    """
+    data = tr.dict()
+    user_id = data["user_id"]
+    written = data["written"]
+    last_modified = data["last_modified"]
+    content = data["content"]
+    feedback = data["feedback"]
+    :return:
+    """
+    record = Tables.TR(user_id=tr.user_id, written=tr.written, last_modified=tr.last_modified, content=tr.content,
+                       feedback=tr.feedback)
+    db.add(record)
+    db.commit()
+    db.refresh(record)
 
 
-def create_cr():
-    pass
+def create_cr(db: Session, cr: Models.Condition):
+    """
+        data = tr.dict()
+        user_id = data["user_id"]
+        written = data["written"]
+        last_modified = data["last_modified"]
+        content = data["content"]
+        feedback = data["feedback"]
+        :return:
+        """
+    record = Tables.CR(user_id=cr.user_id, written=cr.written, last_modified=cr.last_modified, content=cr.content)
+    db.add(record)
+    db.commit()
+    db.refresh(record)
 
 
-def read_tr():
-    pass
+def read_tr(db: Session, user_id: str, wdate: date):
+    return db.query(Tables.TR).filter(Tables.TR.user_id == user_id and
+                                      Tables.TR.written == wdate).first()
 
 
-def read_cr():
-    pass
+def read_cr(db: Session, user_id: str, wdate: date):
+    return db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
+                                      Tables.CR.written == wdate).first()
 
 
 def update_tr():
