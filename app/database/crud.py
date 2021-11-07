@@ -102,3 +102,14 @@ def delete_tr():
 
 def delete_cr():
     pass
+
+
+def save_img(db: Session, name, data):
+    record = Tables.image(img_name=name, img_data=data)
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+
+def read_img(db: Session):
+    return db.query(Tables.image).first()

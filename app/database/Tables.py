@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON, BLOB
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
 
@@ -43,3 +43,11 @@ class CR(Base):
     written = Column(Date, default=date.today())
     last_modified = Column(DateTime, default=datetime.now())
     content = Column(MutableDict.as_mutable(JSON))
+
+
+class image(Base):
+    __tablename__ = "Images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    img_name = Column(String(255))
+    img_data = Column(BLOB)
