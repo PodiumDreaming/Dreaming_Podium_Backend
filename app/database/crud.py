@@ -1,6 +1,6 @@
 from . import Models, Tables
 from sqlalchemy.orm import Session
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 
 def create_user(db: Session, user: Models.UserFull):
@@ -31,8 +31,20 @@ def read_user(db: Session, user_id: str):
 
 
 def update_user(db: Session, user: Models.UserFull):
-    updates = db.query(Tables.User).filter(Tables.User.user_id).update(user)
-    return True
+    user_info = db.query(Tables.User).filter(Tables.User.user_id).update(user)
+    if user_info is None:
+        return False
+    else:
+        user_info.name = user.name
+        user_info.gender = user.gender
+        user_info.birthday = user.birthday
+        user_info.team = user.team
+        user_info.field = user.field
+        user_info.email = user.email
+        user_info.refresh_token = user.refresh_token
+
+        db.commit()
+        return True
 
 
 def delete_user(db: Session, user_id: str):
@@ -42,7 +54,7 @@ def delete_user(db: Session, user_id: str):
     else:
         db.delete(user)
         db.commit()
-    return True
+        return True
 
 
 def create_tr(db: Session, tr: Models.Training):
@@ -85,23 +97,58 @@ def read_tr(db: Session, user_id: str, wdate: date):
 
 def read_cr(db: Session, user_id: str, wdate: date):
     return db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
-                                      Tables.CR.written == wdate).first()
+                                        Tables.CR.written == wdate).fist()
 
 
-def update_tr():
-    pass
+def update_tr(db: Session, user_id: str, wdate: date, content, feedback: str):
+    record = db.query(Tables.TR).filter(Tables.TR.user_id == user_id and
+                                        Tables.TR.written == wdate).first()
+    if record is None:
+        return False
+    else:
+        now = datetime.now(tz=timezone.utc)
+        localtime = now.astimezone()
+        record.last_modified = localtime
+        record.content = content
+        record.feedback = feedback
+        db.commit()
+        return True
 
 
-def update_cr():
-    pass
+def update_cr(db: Session, user_id: str, wdate: date, content):
+    record = db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
+                                        Tables.CR.written == wdate).first()
+    if record is None:
+        return False
+    else:
+        now = datetime.now(tz=timezone.utc)
+        localtime = now.astimezone()
+        record.last_modified = localtime
+        record.content = content
+        db.commit()
+        return True
 
 
-def delete_tr():
-    pass
+def delete_tr(db: Session, user_id: str, wdate: date):
+    record = db.query(Tables.TR).filter(Tables.TR.user_id == user_id and
+                                        Tables.TR.written == wdate).first()
+    if record is None:
+        return False
+    else:
+        db.delete(record)
+        db.commit()
+        return True
 
 
-def delete_cr():
-    pass
+def delete_cr(db: Session, user_id: str, wdate: date):
+    record = db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
+                                        Tables.CR.written == wdate).first()
+    if record is None:
+        return False
+    else:
+        db.delete(record)
+        db.commit()
+        return True
 
 
 def save_img(db: Session, name, data):
