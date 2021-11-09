@@ -24,6 +24,7 @@ def create_user(db: Session, user: Models.UserFull):
     db.add(user_record)
     db.commit()
     db.refresh(user_record)
+    return user_record
 
 
 def read_user(db: Session, user_id: str):
@@ -72,6 +73,7 @@ def create_tr(db: Session, tr: Models.Training):
     db.add(record)
     db.commit()
     db.refresh(record)
+    return record
 
 
 def create_cr(db: Session, cr: Models.Condition):
@@ -88,16 +90,17 @@ def create_cr(db: Session, cr: Models.Condition):
     db.add(record)
     db.commit()
     db.refresh(record)
+    return record
 
 
-def read_tr(db: Session, user_id: str, wdate: date):
+def read_tr(db: Session, user_id: str, wdate: date, number: int):
     return db.query(Tables.TR).filter(Tables.TR.user_id == user_id and
-                                      Tables.TR.written == wdate).first()
+                                      Tables.TR.written == wdate).limit(number).all()
 
 
-def read_cr(db: Session, user_id: str, wdate: date):
+def read_cr(db: Session, user_id: str, wdate: date, number: int):
     return db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
-                                        Tables.CR.written == wdate).fist()
+                                      Tables.CR.written == wdate).limit(number).all()
 
 
 def update_tr(db: Session, user_id: str, wdate: date, content, feedback: str):
