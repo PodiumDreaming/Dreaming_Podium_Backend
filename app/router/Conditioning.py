@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..database import Models, crud
 from ..database.conn import get_db
 from sqlalchemy.orm import Session
-from datetime import datetime, date, timezone
+from datetime import date
 from typing import Optional
+from ast import literal_eval
+
 
 router = APIRouter(
     prefix="/condition",
@@ -14,23 +16,16 @@ router = APIRouter(
 
 @router.get("/testCR")
 async def write(db: Session = Depends(get_db)):
-    now = datetime.now(tz=timezone.utc)
-    localtime = now.astimezone()
     data = {
         "user_id": "1951543508",
-        "written": localtime,
-        "last_modified": localtime,
+        "written": date.today(),
         "content": {
-            "훈련내용": "달리기",
-            "루틴": {"루틴1": "done",
-                   "루틴2": "done"},
-            "잘한점": "시간단축",
-            "목한점": "호흡조절",
+            "부상": None,
+            "기분": "보통",
         }
     }
     test_data = Models.Condition(**data)
-    crud.create_cr(db=db, cr=test_data)
-    return test_data
+    return crud.create_cr(cr=test_data, db=db)
 
 
 @router.get("/read")
@@ -42,8 +37,9 @@ async def read(user_id: str, wdate: date, number: Optional[int] = 1, db: Session
 
 
 @router.post("/create")
-async def write_record(record: Models.Condition, db: Session = Depends(get_db)):
-    return crud.create_cr(db=db, cr=record)
+async def write_record(record, db: Session = Depends(get_db)):
+    data = Models.Condition(**literal_eval(record))
+    return crud.create_cr(cr=data, db=db)
 
 
 @router.post("/update")

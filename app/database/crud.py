@@ -1,21 +1,10 @@
 from . import Models, Tables
 from sqlalchemy.orm import Session
 from datetime import datetime, date, timezone
+from ast import literal_eval
 
 
 def create_user(db: Session, user: Models.UserFull):
-    """
-    data = user.dict()
-    name = data["name"]
-    gender = data["gender"]
-    birthday = data["birthday"]
-    team = data["team"]
-    field = data["field"]
-    email = data["email"]
-    register_date = data["register_data"]
-    acc_type = data["acc_type"]
-    """
-
     # a command to create a record in db(params)
 
     user_record = Tables.User(user_id=user.user_id, name=user.name, gender=user.gender, birthday=user.birthday,
@@ -58,16 +47,7 @@ def delete_user(db: Session, user_id: str):
         return True
 
 
-def create_tr(db: Session, tr: Models.Training):
-    """
-    data = tr.dict()
-    user_id = data["user_id"]
-    written = data["written"]
-    last_modified = data["last_modified"]
-    content = data["content"]
-    feedback = data["feedback"]
-    :return:
-    """
+def create_tr(tr: Models.Training, db: Session):
     record = Tables.TR(user_id=tr.user_id, written=tr.written, last_modified=tr.last_modified, content=tr.content,
                        feedback=tr.feedback)
     db.add(record)
@@ -76,16 +56,7 @@ def create_tr(db: Session, tr: Models.Training):
     return record
 
 
-def create_cr(db: Session, cr: Models.Condition):
-    """
-        data = tr.dict()
-        user_id = data["user_id"]
-        written = data["written"]
-        last_modified = data["last_modified"]
-        content = data["content"]
-        feedback = data["feedback"]
-        :return:
-        """
+def create_cr(cr: Models.Condition, db: Session):
     record = Tables.CR(user_id=cr.user_id, written=cr.written, last_modified=cr.last_modified, content=cr.content)
     db.add(record)
     db.commit()
@@ -94,17 +65,17 @@ def create_cr(db: Session, cr: Models.Condition):
 
 
 def read_tr(db: Session, user_id: str, wdate: date, number: int):
-    return db.query(Tables.TR).filter(Tables.TR.user_id == user_id and
+    return db.query(Tables.TR).filter(Tables.TR.user_id == user_id,
                                       Tables.TR.written == wdate).limit(number).all()
 
 
 def read_cr(db: Session, user_id: str, wdate: date, number: int):
-    return db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
+    return db.query(Tables.CR).filter(Tables.CR.user_id == user_id,
                                       Tables.CR.written == wdate).limit(number).all()
 
 
 def update_tr(db: Session, user_id: str, wdate: date, content, feedback: str):
-    record = db.query(Tables.TR).filter(Tables.TR.user_id == user_id and
+    record = db.query(Tables.TR).filter(Tables.TR.user_id == user_id,
                                         Tables.TR.written == wdate).first()
     if record is None:
         return False
@@ -112,14 +83,14 @@ def update_tr(db: Session, user_id: str, wdate: date, content, feedback: str):
         now = datetime.now(tz=timezone.utc)
         localtime = now.astimezone()
         record.last_modified = localtime
-        record.content = content
+        record.content = literal_eval(content)
         record.feedback = feedback
         db.commit()
         return True
 
 
 def update_cr(db: Session, user_id: str, wdate: date, content):
-    record = db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
+    record = db.query(Tables.CR).filter(Tables.CR.user_id == user_id,
                                         Tables.CR.written == wdate).first()
     if record is None:
         return False
@@ -127,13 +98,13 @@ def update_cr(db: Session, user_id: str, wdate: date, content):
         now = datetime.now(tz=timezone.utc)
         localtime = now.astimezone()
         record.last_modified = localtime
-        record.content = content
+        record.content = literal_eval(content)
         db.commit()
         return True
 
 
 def delete_tr(db: Session, user_id: str, wdate: date):
-    record = db.query(Tables.TR).filter(Tables.TR.user_id == user_id and
+    record = db.query(Tables.TR).filter(Tables.TR.user_id == user_id,
                                         Tables.TR.written == wdate).first()
     if record is None:
         return False
@@ -144,7 +115,7 @@ def delete_tr(db: Session, user_id: str, wdate: date):
 
 
 def delete_cr(db: Session, user_id: str, wdate: date):
-    record = db.query(Tables.CR).filter(Tables.CR.user_id == user_id and
+    record = db.query(Tables.CR).filter(Tables.CR.user_id == user_id,
                                         Tables.CR.written == wdate).first()
     if record is None:
         return False

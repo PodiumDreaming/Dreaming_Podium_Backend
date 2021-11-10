@@ -36,7 +36,7 @@ class UserFull(User):
 
 class Record(BaseModel):
     user_id: str
-    written: Optional[date]
+    written: date
     last_modified: Optional[datetime]
     content: Optional[dict]
 
