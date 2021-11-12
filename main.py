@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from app.router import KaKao, Conditioning, Training, Account
 from app.database import Tables, crud
@@ -61,7 +61,7 @@ async def show_img(db: Session = Depends(get_db)):
 
 
 @app.get("/read_img")
-async def read_img(db:Session = Depends(get_db)):
+async def read_img(db: Session = Depends(get_db)):
     img_data = crud.read_img(db).img_data
     img = Image.open(BytesIO(img_data))
     img.show()
@@ -79,3 +79,12 @@ async def show_img():
     saveno += 1
     print(saveno)
     img.show()
+
+
+@app.post("/uploadfile/")
+async def create_upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    content = await file.read()
+    name = file.filename
+    crud.save_img(db, name, content)
+    return {"filename": file.filename,
+            "content": file.content_type}

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 import requests
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
+from datetime import datetime
 
 from ..config.config import kakao_client, callback_url
 from ..database import Models, crud
@@ -43,7 +43,7 @@ def kakao_signin(info, refresh_token, db):
         "acc_type": acc_type,
     }
     user = Models.User(**data)
-    user_db = Models.UserFull(**data, password=password, refresh_token= refresh_token)
+    user_db = Models.UserFull(**data, password=password, refresh_token=refresh_token)
     crud.create_user(db=db, user=user_db)
     return user
 
@@ -109,4 +109,3 @@ async def get_info(tokens: dict, db: Session = Depends(get_db)):
             detail="Invalid token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-

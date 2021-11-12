@@ -52,4 +52,3 @@ class Condition(Record):
 
     class Config:
         orm_mode = True
-
