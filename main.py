@@ -77,14 +77,12 @@ async def show_img():
 
     img = Image.open(f"{saveno}.jpg")
     saveno += 1
-    print(saveno)
     img.show()
 
 
-@app.post("/uploadfile/")
+@app.post("/uploadfile")
 async def create_upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
     content = await file.read()
     name = file.filename
     crud.save_img(db, name, content)
-    return {"filename": file.filename,
-            "content": file.content_type}
+

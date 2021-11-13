@@ -5,7 +5,8 @@ import os
 import pymysql
 
 Remote = os.getenv("MariaDB")
-db_url = f"mysql+pymysql://admin:jeongmh0902@{Remote}:3306/MariaDB"
+db_url = f"mysql+pymysql://admin:jeongmh0902@{Remote}:3306/MariaDB?charset=utf8mb4"
+# db_url = "mysql+pymysql://root:jeongmh0902@localhost:3306/dptest?charset=utf8mb4"
 
 engine = create_engine(db_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
