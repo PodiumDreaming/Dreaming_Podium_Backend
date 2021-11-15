@@ -36,10 +36,8 @@ async def read(user_id: str, wdate: date, number: Optional[int] = 1, db: Session
     return record
 
 
-@router.post("/create")
-async def write_record(record, db: Session = Depends(get_db)):
-    data = Models.Condition(**literal_eval(record))
-    return crud.create_cr(cr=data, db=db)
+def write_crecord(record: Models.Condition, db: Session = Depends(get_db)):
+    return crud.create_cr(cr=record, db=db)
 
 
 @router.post("/update")

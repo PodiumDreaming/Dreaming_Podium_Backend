@@ -18,6 +18,7 @@ router = APIRouter(
 def kakao_signin(info, refresh_token, db):
     kakao_account = info.get("kakao_account")
     profile = kakao_account.get("profile")
+
     """
     Check if user already exists in database.
     If so, then create user instance with the information in database.

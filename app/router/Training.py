@@ -40,10 +40,8 @@ async def read(user_id: str, wdate: date = date.today(), number: Optional[int] =
     return record
 
 
-@router.post("/create")
-async def write_record(record, db: Session = Depends(get_db)):
-    data = Models.Training(**literal_eval(record))
-    return crud.create_tr(tr=data, db=db)
+def write_trecord(record: Models.Training, db):
+    return crud.create_tr(tr=record, db=db)
 
 
 @router.post("/update")
