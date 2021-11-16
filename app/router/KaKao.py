@@ -36,7 +36,7 @@ def kakao_signin(info, refresh_token, db):
     password = get_password_hash(user_id)
 
     data = {
-        "user_id": user_id,
+        "user_id": "KA" + user_id,
         "name": name,
         "gender": gender,
         "email": email,

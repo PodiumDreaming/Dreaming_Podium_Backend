@@ -47,10 +47,11 @@ async def update_record(user_id: str, wdate: date, content, db: Session = Depend
                           wdate=wdate,
                           content=content)
 
-
+'''
 @router.delete("/delete")
 async def delete_record(user_id: str, wdate: date, db: Session = Depends(get_db)):
     if not crud.delete_cr(db=db, user_id=user_id, wdate=wdate):
         raise HTTPException(status_code=404, detail="Could not find user")
     else:
         return {"status": "200"}
+'''
