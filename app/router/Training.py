@@ -4,7 +4,6 @@ from ..database.conn import get_db
 from sqlalchemy.orm import Session
 from datetime import date
 from typing import Optional
-from ast import literal_eval
 
 
 router = APIRouter(
@@ -20,11 +19,11 @@ async def write(db: Session = Depends(get_db)):
         "user_id": "1951543508",
         "written": date.today(),
         "content": {
-            "훈련내용": "달리기",
-            "루틴": {"루틴1": "done",
-                   "루틴2": "done"},
-            "잘한점": "시간단축",
-            "못한점": "호흡조절",
+            "train_detail": "jogging",
+            "routines": {"routine1": "done",
+                            "routine2": "done"},
+            "success": "time reduce",
+            "failure": "breathe control",
         },
         "feedback": "Do better"
     }

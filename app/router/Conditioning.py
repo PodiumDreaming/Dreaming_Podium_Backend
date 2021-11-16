@@ -4,7 +4,6 @@ from ..database.conn import get_db
 from sqlalchemy.orm import Session
 from datetime import date
 from typing import Optional
-from ast import literal_eval
 
 
 router = APIRouter(

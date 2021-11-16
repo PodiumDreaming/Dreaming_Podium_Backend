@@ -1,7 +1,6 @@
 from . import Models, Tables
 from sqlalchemy.orm import Session
 from datetime import datetime, date, timezone
-from ast import literal_eval
 
 
 def create_user(db: Session, user: Models.UserFull):
@@ -21,7 +20,7 @@ def read_user(db: Session, user_id: str):
 
 
 def update_user(db: Session, user: Models.UserFull):
-    user_info = db.query(Tables.User).filter(Tables.User.user_id).update(user)
+    user_info = db.query(Tables.User).filter(Tables.User.user_id).first()
     if user_info is None:
         return False
     else:
@@ -80,10 +79,9 @@ def update_tr(db: Session, user_id: str, wdate: date, content, feedback: str):
     if record is None:
         return False
     else:
-        now = datetime.now(tz=timezone.utc)
-        localtime = now.astimezone()
-        record.last_modified = localtime
-        record.content = literal_eval(content)
+        now = datetime.now(tz=timezone.utc).astimezone()
+        record.last_modified = now
+        record.content = content
         record.feedback = feedback
         db.commit()
         return True
@@ -95,10 +93,9 @@ def update_cr(db: Session, user_id: str, wdate: date, content):
     if record is None:
         return False
     else:
-        now = datetime.now(tz=timezone.utc)
-        localtime = now.astimezone()
-        record.last_modified = localtime
-        record.content = literal_eval(content)
+        now = datetime.now(tz=timezone.utc).astimezone()
+        record.last_modified = now
+        record.content = content
         db.commit()
         return True
 

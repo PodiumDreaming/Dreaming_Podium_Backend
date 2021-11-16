@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON, BLOB
 from sqlalchemy.ext.mutable import MutableDict
 # from sqlalchemy.orm import relationship
@@ -29,7 +29,7 @@ class TR(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(255), ForeignKey("users.user_id"))
     written = Column(Date, default=date.today())
-    last_modified = Column(DateTime, default=datetime.now())
+    last_modified = Column(DateTime, default=datetime.now(tz=timezone.utc).astimezone())
     content = Column(MutableDict.as_mutable(JSON))
     feedback = Column(String(255), nullable=True)
 
@@ -41,7 +41,7 @@ class CR(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(255), ForeignKey("users.user_id"))
     written = Column(Date, default=date.today())
-    last_modified = Column(DateTime, default=datetime.now())
+    last_modified = Column(DateTime, default=datetime.now(tz=timezone.utc).astimezone())
     content = Column(MutableDict.as_mutable(JSON))
 
 
