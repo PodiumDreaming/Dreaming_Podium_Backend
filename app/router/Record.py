@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, File, UploadFile
 from typing import Optional
 from datetime import datetime
-
+from ast import literal_eval
 from ..database import Models, crud
 from ..router import Training, Conditioning
 from app.database.conn import get_db
@@ -65,33 +65,16 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     """
     :param db: Connection to database. This field is not needed.\n
     :param user_id: User_id of the owner of the record.\n
-    :param wdate: Date of the record.\n
+    :param wdate: Date of the record. Must be something like 'Fri Nov 05 2021'\n
     :param key_type: Identifier of Updating part of the record.\n
-    key_type must be one of:
+    key_type must be one of:\n
     "train_detail", "routines", "success", "failure", "mind", "physical", "injury"\n
-    :param content: Updating value. mind/physical/injury values must be list --> e.g) ["lethargic", "Tired"].\n
+    :param\n
+    content: Updating value.\n
+    'routines' value must contain all routines involved in 'routines', not just new value.\n
+    e.g)) {"routine1_name": True, "routine2_name": False, "routine3_name": True}\n
+    'mind'/'physical'/'injury' values must be given in list, containing all information, not just new value.\n
     :return: 200Ok on Success.\n
-    sample = {
-        # 쓰인 날짜
-        "date": 'Fri Nov 05 2021',
-        # "date": "2021-11-15",
-        # [트레이닝 파트 글 목록]
-        "noteContentGroup": {
-            "training": {
-                "train_detail": "노트내용",
-                "routines": {"routine_name1": "done",
-                             "routine_name2": "done"},
-                "success": "뭔가 잘한것",
-                "failure": "뭔가 못한것",
-            },
-            "feedback": "피드백 내용",
-            "conditioning": {
-                "mind": ['정신이 번쩍'],
-                "physical": [],
-                "injury": []
-            },
-        }
-    }
     """
 
     d = convert_date(wdate).get("date")
@@ -109,21 +92,51 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
         # updating part
         tr = tr_record[0]
         cr = cr_record[0]
+        # training data
         if key_type == "train_detail":
             tr.content["train_detail"] = content
         elif key_type == "routines":
             tr.content["routines"] = content
         elif key_type == "success":
-            tr.content["success"] = content
+            success = {"content": content, "image": None}
+            tr.content["success"] = success
         elif key_type == "failure":
-            tr.content["failure"] = content
+            failure = {"content": content, "image": None}
+            tr.content["failure"] = failure
+        # conditioning data
         elif key_type == "mind":
             cr.content["mind"] = content
+            """
+            mind = cr.content.get("mind")
+            if len(mind) == 1:
+                mind[0] = content
+                cr.content["mind"] = mind
+            else:
+                mind.append(content)
+                cr.content["mind"] = mind
+            """
         elif key_type == "physical":
             cr.content["physical"] = content
+            """
+            physical = cr.content.get("physical")
+            if len(physical) == 1:
+                physical[0] = content
+                cr.content["physical"] = physical
+            else:
+                physical.append(content)
+                cr.content["physical"] = physical
+            """
         elif key_type == "injury":
             cr.content["injury"] = content
-
+            """
+            injury = cr.content.get("injury")
+            if len(injury) == 1:
+                injury[0] = content
+                cr.content["injury"] = injury
+            else:
+                injury.append(content)
+                cr.content["injury"] = injury
+            """
         crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
         crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)
 
@@ -174,12 +187,12 @@ async def read(user_id, date, db: Session = Depends(get_db)):
             tr = crud.read_tr(user_id=user_id, wdate=d, db=db, number=1)
             if len(tr) == 0 or tr is None:
                 training = {
-                    "train_detail": None,
+                    "train_detail": {"content": None},
                     "routines": None,
                     "success": {"content": None, "image": None},
                     "failure": {"content": None, "image": None},
                 }
-                feedback = None
+                feedback = {"content": None}
             else:
                 training = tr[0].content
                 feedback = tr[0].feedback
@@ -189,16 +202,25 @@ async def read(user_id, date, db: Session = Depends(get_db)):
                 conditioning = {
                     "mind": [],
                     "physical": [],
-                    "injury": [],
+                    "injury": [
+                        {
+                            "injuryDirection": None,
+                            "injurySection": None,
+                            "InjuryForm": None,
+                            "painData": None,
+                            "interruptData": None,
+                            "injuryMemo": None,
+                         }
+                    ],
                 }
             else:
                 conditioning = cr[0].content
 
+            training["feedback"] = feedback
             res = {
                 "date": date,
                 "noteContentGroup": {
                     "training": training,
-                    "feedback": feedback,
                     "conditioning": conditioning,
                 }
             }
