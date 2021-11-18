@@ -94,7 +94,8 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
         cr = cr_record[0]
         # training data
         if key_type == "train_detail":
-            tr.content["train_detail"] = content
+            detail = {"content": content}
+            tr.content["train_detail"] = detail
         elif key_type == "routines":
             tr.content["routines"] = content
         elif key_type == "success":
