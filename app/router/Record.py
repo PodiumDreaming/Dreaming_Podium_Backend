@@ -52,9 +52,9 @@ def initialize_c(user_id, wdate, db):
         "user_id": user_id,
         "written": wdate,
         "content": {
-            "mind": [],
-            "physical": [],
-            "injury": [],
+            "mind": list(),
+            "physical": list(),
+            "injury": list(),
         }
     }
     crud.create_cr(cr=Models.Condition(**cr), db=db)
@@ -76,8 +76,7 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     'mind'/'physical'/'injury' values must be given in list, containing all information, not just new value.\n
     :return: 200Ok on Success.\n
     """
-    print(content)
-    print(type(content))
+
     d = convert_date(wdate).get("date")
     try:
         tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
@@ -118,7 +117,8 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
                 cr.content["mind"] = mind
             """
         elif key_type == "physical":
-            physical = cr.content.get("physical")
+            cr.content["physical"] = content
+            """
             if len(physical) == 1:
                 physical[0] = content[0]
                 cr.content["physical"] = physical
@@ -126,7 +126,7 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
                 for elem in content:
                     physical.append(elem)
                 cr.content["physical"] = physical
-
+            """
         elif key_type == "injury":
             cr.content["injury"] = content
             """
@@ -146,6 +146,39 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     except KeyError:
         return {"KeyError": "key probably doesn't exist."}
     return {"status": "200OK"}
+
+
+@router.post("/write-t/{user_id}")
+async def write(user_id, wdate, key_type, db: Session = Depends(get_db)):
+    content = ["Yee", "스트레칭을 충분히 못했어요", "무리한 훈련을 했어요", "체중이 늘었어요"]
+
+    d = convert_date(wdate).get("date")
+    tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
+    cr_record = crud.read_cr(db=db, user_id=user_id, wdate=d, number=1)
+    # initializing part: create record if there isn't one.
+    if len(tr_record) == 0:
+        initialize_t(user_id=user_id, wdate=d, db=db)
+        tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
+    if len(cr_record) == 0:
+        initialize_c(user_id=user_id, wdate=d, db=db)
+        cr_record = crud.read_cr(db=db, user_id=user_id, wdate=d, number=1)
+
+    tr = tr_record[0]
+    cr = cr_record[0]
+    if key_type == "physical":
+        cr.content["physical"] = content
+        """
+        physical = cr.content.get("physical")
+        if len(physical) == 1:
+            physical[0] = content[0]
+            cr.content["physical"] = physical
+        else:
+            for elem in content:
+                physical.append(elem)
+            cr.content["physical"] = physical
+        """
+    crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
+    crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)
 
 
 @router.get("/get/{user_id}")
