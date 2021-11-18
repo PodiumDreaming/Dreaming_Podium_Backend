@@ -76,7 +76,8 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     'mind'/'physical'/'injury' values must be given in list, containing all information, not just new value.\n
     :return: 200Ok on Success.\n
     """
-
+    print(content)
+    print(type(content))
     d = convert_date(wdate).get("date")
     try:
         tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
@@ -117,16 +118,15 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
                 cr.content["mind"] = mind
             """
         elif key_type == "physical":
-            cr.content["physical"] = content
-            """
             physical = cr.content.get("physical")
             if len(physical) == 1:
-                physical[0] = content
+                physical[0] = content[0]
                 cr.content["physical"] = physical
             else:
-                physical.append(content)
+                for elem in content:
+                    physical.append(elem)
                 cr.content["physical"] = physical
-            """
+
         elif key_type == "injury":
             cr.content["injury"] = content
             """
