@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, File, UploadFile
 from typing import Optional
 from datetime import datetime
-from ast import literal_eval
 from ..database import Models, crud
-from ..router import Training, Conditioning
 from app.database.conn import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -99,10 +97,12 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
         elif key_type == "routines":
             tr.content["routines"] = content
         elif key_type == "success":
-            success = {"content": content, "image": None}
+            url = tr.content.get("success").get("image")
+            success = {"content": content, "image": url}
             tr.content["success"] = success
         elif key_type == "failure":
-            failure = {"content": content, "image": None}
+            url = tr.content.get("failure").get("image")
+            failure = {"content": content, "image": url}
             tr.content["failure"] = failure
         # conditioning data
         elif key_type == "mind":

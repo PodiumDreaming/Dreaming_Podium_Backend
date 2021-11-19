@@ -6,9 +6,8 @@ from datetime import datetime, date, timezone
 def create_user(db: Session, user: Models.UserFull):
     # a command to create a record in db(params)
 
-    user_record = Tables.User(user_id=user.user_id, name=user.name, gender=user.gender, birthday=user.birthday,
-                              team=user.team, field=user.field, email=user.email, register_date=user.register_date,
-                              acc_type=user.acc_type, password=user.password, refresh_token=user.refresh_token)
+    user_record = Tables.User(user_id=user.user_id,  register_date=user.register_date,
+                              acc_type=user.acc_type, password=user.password)
     db.add(user_record)
     db.commit()
     db.refresh(user_record)
@@ -19,29 +18,51 @@ def read_user(db: Session, user_id: str):
     return db.query(Tables.User).filter(Tables.User.user_id == user_id).first()
 
 
-def update_user(db: Session, user: Models.UserFull):
-    user_info = db.query(Tables.User).filter(Tables.User.user_id).first()
-    if user_info is None:
-        return False
-    else:
-        user_info.name = user.name
-        user_info.gender = user.gender
-        user_info.birthday = user.birthday
-        user_info.team = user.team
-        user_info.field = user.field
-        user_info.email = user.email
-        user_info.refresh_token = user.refresh_token
-
-        db.commit()
-        return True
-
-
 def delete_user(db: Session, user_id: str):
     user = db.query(Tables.User).filter(Tables.User.user_id == user_id).first()
     if user is None:
         return False
     else:
         db.delete(user)
+        db.commit()
+        return True
+
+
+def create_profile(db: Session, profile: Models.Profile):
+    user_profile = Tables.Profile(user_id=profile.user_id, name=profile.name, gender=profile.gender,
+                                  birthday=profile.birthday, team=profile.team, field=profile.field)
+    db.add(user_profile)
+    db.commit()
+    db.refresh(user_profile)
+    return user_profile
+
+
+def read_profile(db: Session, user_id: str):
+    return db.query(Tables.Profile).filter(Tables.Profile.user_id == user_id).first()
+
+
+def update_profile(db: Session, profile: Models.Profile):
+    user_info = db.query(Tables.Profile).filter(Tables.Profile.user_id == profile.user_id).first()
+    if user_info is None:
+        return False
+    else:
+        user_info.name = profile.name
+        user_info.gender = profile.gender
+        user_info.birthday = profile.birthday
+        user_info.team = profile.team
+        user_info.field = profile.field
+        user_info.profile_image= profile.profile_image
+
+        db.commit()
+        return True
+
+
+def delete_profile(db: Session, user_id: str):
+    profile = db.query(Tables.Profile).filter(Tables.Profile.user_id == user_id).first()
+    if profile is None:
+        return False
+    else:
+        db.delete(profile)
         db.commit()
         return True
 
@@ -123,11 +144,11 @@ def delete_cr(db: Session, user_id: str, wdate: date):
 
 
 def save_img(db: Session, name, data):
-    record = Tables.image(img_name=name, img_data=data)
+    record = Tables.Image(img_name=name, img_data=data)
     db.add(record)
     db.commit()
     db.refresh(record)
 
 
 def read_img(db: Session):
-    return db.query(Tables.image).first()
+    return db.query(Tables.Image).first()

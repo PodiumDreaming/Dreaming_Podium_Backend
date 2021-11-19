@@ -16,7 +16,7 @@ router = APIRouter(
 @router.get("/testTR")
 async def write(db: Session = Depends(get_db)):
     data = {
-        "user_id": "1951543508",
+        "user_id": "KA1951543508",
         "written": date.today(),
         "content": {
             "train_detail": "jogging",

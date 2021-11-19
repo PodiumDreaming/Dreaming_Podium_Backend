@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-def kakao_signin(info, refresh_token, db):
+def kakao_signin(info, db):
     kakao_account = info.get("kakao_account")
     profile = kakao_account.get("profile")
 
@@ -26,27 +26,42 @@ def kakao_signin(info, refresh_token, db):
     Then create a jwt token base on the user instance.
     """
 
-    user_id = str(info.get("id", None))
+    user_id = "KA" + str(info.get("id", None))
+    user = crud.read_user(db=db, user_id=user_id)
+    if user is not None:
+        return {"Already Registered": "Current user is already registered in."}
+
     name = profile.get("nickname", None)
     gender = kakao_account.get("gender", None)
-    email = kakao_account.get("email", None)
+    # email = kakao_account.get("email", None)
     reg_date = datetime.now().astimezone()
     acc_type = "KAKAO"
 
     password = get_password_hash(user_id)
 
-    data = {
-        "user_id": "KA" + user_id,
+    user_data = {
+        "user_id": user_id,
         "name": name,
         "gender": gender,
-        "email": email,
+        # "email": email,
         "register_date": reg_date,
         "acc_type": acc_type,
     }
-    user = Models.User(**data)
-    user_db = Models.UserFull(**data, password=password, refresh_token=refresh_token)
+    user_profile = {
+        "user_id": user_id,
+        "name": name,
+        "gender": gender,
+        "team": None,
+        "field": None,
+        "profile_image": None,
+    }
+    user = Models.User(**user_data)
+    user_db = Models.UserFull(**user_data, password=password)
     crud.create_user(db=db, user=user_db)
-    return user
+
+    profile = Models.Profile(**user_profile)
+    crud.create_profile(db=db, profile=profile)
+    return {"user_id": user_id}
 
 
 @router.get("/kakao/me", response_model=Models.User)
@@ -98,12 +113,12 @@ async def get_info(tokens: dict, db: Session = Depends(get_db)):
     """
     # get kakao profile info using access token
     access_token = tokens.get("access_token")
-    refresh_token = tokens.get("access_token")
+
     if access_token is not None:
         info_rq = requests.get("https://kapi.kakao.com/v2/user/me",
                                headers={"Authorization": f"Bearer {access_token}"})
         info = info_rq.json()
-        return kakao_signin(info, refresh_token, db)
+        return kakao_signin(info, db)
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

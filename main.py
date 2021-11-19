@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+
+import TestCodes
 from app.router import KaKao, Conditioning, Training, Account, Record
 from app.database import Tables
 from app.database.conn import engine
@@ -13,10 +15,11 @@ def init_app():
     """
     app = FastAPI()
     app.include_router(KaKao.router)
-    app.include_router(Training.router)
-    app.include_router(Conditioning.router)
+    # app.include_router(Training.router)
+    # app.include_router(Conditioning.router)
     app.include_router(Account.router)
     app.include_router(Record.router)
+    app.include_router(TestCodes.router)
     origins = [
         "http://localhost:3000",
         "localhost:3000"

@@ -10,16 +10,24 @@ class User(Base):
     __tablename__ = "users"
 
     user_id = Column(String(255), primary_key=True, index=True)
+    # email = Column(String(255), nullable=True, default=None)
+    register_date = Column(DateTime)
+    acc_type = Column(String(255))
+    password = Column(String(255))
+    # refresh_token = Column(String(255))
+
+
+class Profile(Base):
+    __tablename__ = "profile"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(256), ForeignKey("users.user_id"))
     name = Column(String(255))
     gender = Column(String(255))
     birthday = Column(Date, nullable=True, default=None)
     team = Column(String(255), nullable=True, default=None)
     field = Column(String(255), nullable=True, default=None)
-    email = Column(String(255), nullable=True, default=None)
-    register_date = Column(DateTime)
-    acc_type = Column(String(255))
-    password = Column(String(255))
-    refresh_token = Column(String(255))
+    profile_image = Column(MutableDict.as_mutable(JSON), nullable=True, default=None)
 
 
 # training record
@@ -45,9 +53,12 @@ class CR(Base):
     content = Column(MutableDict.as_mutable(JSON))
 
 
-class image(Base):
+class Image(Base):
     __tablename__ = "Images"
 
     id = Column(Integer, primary_key=True, index=True)
     img_name = Column(String(255))
-    img_data = Column(BLOB)
+    url = Column(String(256))
+    user_id = Column(String(256), ForeignKey("users.user_id"))
+    written = Column(Date, default=date.today())
+    last_modified = Column(DateTime, default=datetime.now(tz=timezone.utc).astimezone())
