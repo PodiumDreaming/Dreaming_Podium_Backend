@@ -14,7 +14,7 @@ import urllib.request
 
 router = APIRouter(
     prefix="/test",
-    tags=["기능테스트용"],
+    tags=["기능테스트용-only use upload file"],
     dependencies=[],
 )
 
@@ -57,6 +57,16 @@ async def read_img(db: Session = Depends(get_db)):
 @router.post("/uploadfile")
 async def upload_img(user_id: str, image_type: str, wdate,
                      files: List[UploadFile] = File(...), db: Session = Depends(get_db), s3=Depends(get_s3)):
+    """
+    :param user_id: user_id of image owner.\n
+    :param image_type: "profile" for profile image, "success" or "failure" for training record image.\n
+    :param wdate: written date of record. If uploading profile image, enter today's date.\n
+    e.g) Fri Nov 19 2021\n
+    :param files: Uploading image files.\n
+    :param db: db connection. This field is not required.\n
+    :param s3: s3 connection. This field is not required.\n
+    :return: 200ok on success.\n
+    """
     if image_type not in ["profile", "success", "failure"]:
         return
     else:
