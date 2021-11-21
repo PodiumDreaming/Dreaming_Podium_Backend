@@ -1,15 +1,13 @@
 from pydantic import BaseModel
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 
 
 class User(BaseModel):
     """
-    user_id: 유저 고유 ID
-    email: 이메일 주소
-    register_date: 가입일
-    acc_type: 가입 유형
-    refresh_token: access_token 만료전에 재발급에 사용되는 토큰
+    user_id: 유저 고유 ID\n
+    register_date: 가입일\n
+    acc_type: 가입 유형\n
     """
     user_id: str
     # email: Optional[str] = None
@@ -26,12 +24,13 @@ class UserFull(User):
 
 class Profile(BaseModel):
     """
-    name: 이름
-    gender: 성별
-    birthday: 생년월일
-    team: 소속 (팀)
-    field: 종목
-    profile_image: 프로필 사진
+    user_id: 유저 고유 ID\n
+    name: 이름\n
+    gender: 성별\n
+    birthday: 생년월일\n
+    team: 소속 (팀)\n
+    field: 종목\n
+    profile_image: 프로필 사진 url\n
     """
     user_id: str
     name: str
@@ -68,6 +67,25 @@ class Condition(Record):
         orm_mode = True
 
 
+class Objectives(BaseModel):
+    """
+    user_id: 유저 고유 ID\n
+    objectives: 목표\n
+    requirements: 자질\n
+    efforts: 노력\n
+    routines: 루틴\n
+    """
+    user_id: str
+    objectives: Optional[str]
+    requirements: Optional[str]
+    efforts: Optional[str]
+    routines: Optional[str]
+
+    class Config:
+        orm_mode = True
+
+
+"""
 class Image(BaseModel):
     img_name: str
     url: str
@@ -77,3 +95,4 @@ class Image(BaseModel):
 
     class Config:
         orm_mode = True
+"""

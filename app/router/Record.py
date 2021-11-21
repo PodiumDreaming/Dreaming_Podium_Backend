@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends
 from typing import Optional
 from datetime import datetime
 from ..database import Models, crud
@@ -27,7 +27,8 @@ def convert_date(date):
     except Exception:
         d = None
         detail = {"Exception": "Could not handle data. Check if data is valid."}
-    return {"date": d, "detail": detail}
+    result = {"date": d, "detail": detail}
+    return result
 
 
 def initialize_t(user_id, wdate, db):
@@ -67,7 +68,7 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     :param key_type: Identifier of Updating part of the record.\n
     key_type must be one of:\n
     "train_detail", "routines", "success", "failure", "mind", "physical", "injury"\n
-    :param\n
+    :param content: Writing content\n
     content: Updating value.\n
     'routines' value must contain all routines involved in 'routines', not just new value.\n
     e.g)) {"routine1_name": True, "routine2_name": False, "routine3_name": True}\n
@@ -148,7 +149,7 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     return {"status": "200OK"}
 
 
-@router.post("/write-t/{user_id}")
+@router.post("/debug/{user_id}")
 async def write(user_id, wdate, key_type, db: Session = Depends(get_db)):
     content = ["Yee", "스트레칭을 충분히 못했어요", "무리한 훈련을 했어요", "체중이 늘었어요"]
 
@@ -184,27 +185,25 @@ async def write(user_id, wdate, key_type, db: Session = Depends(get_db)):
 @router.get("/get/{user_id}")
 async def read(user_id, date, db: Session = Depends(get_db)):
     """
-    sample = {
-        # 쓰인 날짜
-        "date": 'Fri Nov 05 2021',
-        # "date": "2021-11-15",
-        # [트레이닝 파트 글 목록]
-        "noteContentGroup": {
-            "training": {
-                "train_detail": "노트내용",
-                "routines": {"routine_name1": "done",
-                             "routine_name2": "done"},
-                "success": "뭔가 잘한것",
-                "failure": "뭔가 못한것",
-            },
-            "feedback": "피드백 내용",
-            "conditioning": {
-                "mind": ['정신이 번쩍'],
-                "physical": [],
-                "injury": []
-            },
-        }
-    }
+    sample = {\n
+        "date": 'Fri Nov 05 2021',\n
+        "date": "2021-11-15",\n
+        "noteContentGroup": {\n
+            "training": {\n
+                "train_detail": "노트내용",\n
+                "routines": {"routine_name1": "done",\n
+                             "routine_name2": "done"},\n
+                "success": "뭔가 잘한것",\n
+                "failure": "뭔가 못한것",\n
+            },\n
+            "feedback": "피드백 내용",\n
+            "conditioning": {\n
+                "mind": ['정신이 번쩍'],\n
+                "physical": [],\n
+                "injury": []\n
+            },\n
+        }\n
+    }\n
     """
     try:
         user = crud.read_user(db=db, user_id=user_id)
@@ -217,7 +216,6 @@ async def read(user_id, date, db: Session = Depends(get_db)):
     else:
         try:
             d = datetime.strptime(date, '%a %b %d %Y').date()
-
             tr = crud.read_tr(user_id=user_id, wdate=d, db=db, number=1)
             if len(tr) == 0 or tr is None:
                 training = {

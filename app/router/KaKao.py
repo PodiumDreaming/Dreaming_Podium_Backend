@@ -47,6 +47,7 @@ def kakao_signin(info, db):
         "register_date": reg_date,
         "acc_type": acc_type,
     }
+    """
     user_profile = {
         "user_id": user_id,
         "name": name,
@@ -55,12 +56,13 @@ def kakao_signin(info, db):
         "field": None,
         "profile_image": None,
     }
+    """
     user = Models.User(**user_data)
     user_db = Models.UserFull(**user_data, password=password)
     crud.create_user(db=db, user=user_db)
 
-    profile = Models.Profile(**user_profile)
-    crud.create_profile(db=db, profile=profile)
+    # profile = Models.Profile(**user_profile)
+    # crud.create_profile(db=db, profile=profile)
     return {"user_id": user_id}
 
 

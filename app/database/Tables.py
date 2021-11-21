@@ -1,5 +1,5 @@
 from datetime import datetime, date, timezone
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON, BLOB
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON
 from sqlalchemy.ext.mutable import MutableDict
 # from sqlalchemy.orm import relationship
 
@@ -20,7 +20,7 @@ class User(Base):
 class Profile(Base):
     __tablename__ = "profile"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String(256), ForeignKey("users.user_id"))
     name = Column(String(255))
     gender = Column(String(255))
@@ -34,7 +34,7 @@ class Profile(Base):
 class TR(Base):
     __tablename__ = "Training"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String(255), ForeignKey("users.user_id"))
     written = Column(Date, default=date.today())
     last_modified = Column(DateTime, default=datetime.now(tz=timezone.utc).astimezone())
@@ -46,19 +46,19 @@ class TR(Base):
 class CR(Base):
     __tablename__ = "Conditioning"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String(255), ForeignKey("users.user_id"))
     written = Column(Date, default=date.today())
     last_modified = Column(DateTime, default=datetime.now(tz=timezone.utc).astimezone())
     content = Column(MutableDict.as_mutable(JSON))
 
 
-class Image(Base):
-    __tablename__ = "Images"
+class Objective(Base):
+    __tablename__ = "Objective"
 
-    id = Column(Integer, primary_key=True, index=True)
-    img_name = Column(String(255))
-    url = Column(String(256))
-    user_id = Column(String(256), ForeignKey("users.user_id"))
-    written = Column(Date, default=date.today())
-    last_modified = Column(DateTime, default=datetime.now(tz=timezone.utc).astimezone())
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(String(256), ForeignKey("users.user_id"), primary_key=True)
+    objectives = Column(String(128), nullable=True)
+    requirements = Column(String(256), nullable=True)
+    efforts = Column(String(256), nullable=True)
+    routines = Column(String(256), nullable=True)

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, date, timezone
 
 
+# user crud
 def create_user(db: Session, user: Models.UserFull):
     # a command to create a record in db(params)
 
@@ -28,6 +29,7 @@ def delete_user(db: Session, user_id: str):
         return True
 
 
+# profile crud
 def create_profile(db: Session, profile: Models.Profile):
     user_profile = Tables.Profile(user_id=profile.user_id, name=profile.name, gender=profile.gender,
                                   birthday=profile.birthday, team=profile.team, field=profile.field)
@@ -51,7 +53,7 @@ def update_profile(db: Session, profile: Models.Profile):
         user_info.birthday = profile.birthday
         user_info.team = profile.team
         user_info.field = profile.field
-        user_info.profile_image= profile.profile_image
+        user_info.profile_image = profile.profile_image
 
         db.commit()
         return True
@@ -67,6 +69,7 @@ def delete_profile(db: Session, user_id: str):
         return True
 
 
+# tr/cr crud
 def create_tr(tr: Models.Training, db: Session):
     record = Tables.TR(user_id=tr.user_id, written=tr.written, last_modified=tr.last_modified, content=tr.content,
                        feedback=tr.feedback)
@@ -143,12 +146,39 @@ def delete_cr(db: Session, user_id: str, wdate: date):
         return True
 
 
-def save_img(db: Session, name, data):
-    record = Tables.Image(img_name=name, img_data=data)
-    db.add(record)
+# objective crud
+def create_objective(db: Session, obj: Models.Objectives):
+    user_obj = Tables.Objective(user_id=obj.user_id, objectives=obj.objectives, requirements=obj.requirements,
+                                efforts=obj.efforts, routines=obj.routines)
+    db.add(user_obj)
     db.commit()
-    db.refresh(record)
+    db.refresh(user_obj)
+    return user_obj
 
 
-def read_img(db: Session):
-    return db.query(Tables.Image).first()
+def read_objective(db: Session, user_id: str):
+    return db.query(Tables.Objective).filter(Tables.Objective.user_id == user_id).first()
+
+
+def update_objective(db: Session, obj: Models.Objectives):
+    user_obj = db.query(Tables.Objective).filter(Tables.Objective.user_id == obj.user_id).first()
+    if user_obj is None:
+        return False
+    else:
+        user_obj.objective = obj.objectives
+        user_obj.requirements = obj.requirements
+        user_obj.efforts = obj.efforts
+        user_obj.routines = obj.routines
+
+        db.commit()
+        return True
+
+
+def delete_objective(db: Session, user_id: str):
+    obj = db.query(Tables.Objective).filter(Tables.Objective.user_id == user_id).first()
+    if obj is None:
+        return False
+    else:
+        db.delete(obj)
+        db.commit()
+        return True

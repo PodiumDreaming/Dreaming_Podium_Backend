@@ -1,26 +1,24 @@
 from fastapi import APIRouter, Depends, File, UploadFile
-from PIL import Image
-from io import BytesIO
 from typing import List
 import os
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from app.database import Tables, crud
+from app.database import crud, Models
 from app.database.conn import get_db, get_s3
 from app.config.config import BUCKET_NAME
 from app.database.Models import Profile
-from datetime import date, datetime
+from datetime import datetime
 from app.router.Record import convert_date
-import urllib.request
+
 
 router = APIRouter(
     prefix="/test",
-    tags=["기능테스트용-only use upload file"],
+    tags=["기능테스트용"],
     dependencies=[],
 )
 
-saveno = 1
-
-
+# saveno = 1
+"""
 @router.get("/image_test")
 async def show_img(db: Session = Depends(get_db)):
     img = Image.open("C:/Users/jeong/PycharmProjects/너굴맨.jpg")
@@ -52,14 +50,18 @@ async def read_img(db: Session = Depends(get_db)):
     img_data = crud.read_img(db).img_data
     img = Image.open(BytesIO(img_data))
     img.show()
+"""
 
 
 @router.post("/uploadfile")
 async def upload_img(user_id: str, image_type: str, wdate,
                      files: List[UploadFile] = File(...), db: Session = Depends(get_db), s3=Depends(get_s3)):
     """
+    API to upload image files for profile or record.\n
     :param user_id: user_id of image owner.\n
-    :param image_type: "profile" for profile image, "success" or "failure" for training record image.\n
+    :param image_type:\n
+        "profile" for profile image\n
+        "success" or "failure" for training record image.\n
     :param wdate: written date of record. If uploading profile image, enter today's date.\n
     e.g) Fri Nov 19 2021\n
     :param files: Uploading image files.\n
@@ -90,7 +92,7 @@ async def upload_img(user_id: str, image_type: str, wdate,
             url = f"https://{BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/{key}"
 
             # add url to dict
-            image_key = f"image{i}"
+            image_key = f"image_{i}"
             image_urls.update({image_key: url})
 
             # delete file in temporary directory.
