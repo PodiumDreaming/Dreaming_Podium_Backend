@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import crud, Models
 from app.database.conn import get_db
 from app.database.Models import Profile
-from app.router.Record import convert_date
-
+from app.util import convert_date
 
 router = APIRouter(
     prefix="/profile",

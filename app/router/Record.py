@@ -1,34 +1,17 @@
 from fastapi import APIRouter, Depends
-from typing import Optional
 from datetime import datetime
 from ..database import Models, crud
 from app.database.conn import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
+from ..util import simple_parser, complex_parser, convert_date
 
 router = APIRouter(
     prefix="/record",
     tags=["기록"],
     dependencies=[],
 )
-
-
-def convert_date(date):
-    try:
-        d = datetime.strptime(date, '%a %b %d %Y').date()
-        detail = {"status": "200OK"}
-    except KeyError:
-        d = None
-        detail = {"KeyError": "Check record has valid keys."}
-    except (TypeError, ValueError):
-        d = None
-        detail = {"Type/Value Error": "Check if date has valid value or is in right format. Example: 'Fri Nov 05 2021'"}
-    except Exception:
-        d = None
-        detail = {"Exception": "Could not handle data. Check if data is valid."}
-    result = {"date": d, "detail": detail}
-    return result
 
 
 def initialize_t(user_id, wdate, db):
@@ -51,16 +34,16 @@ def initialize_c(user_id, wdate, db):
         "user_id": user_id,
         "written": wdate,
         "content": {
-            "mind": list(),
-            "physical": list(),
-            "injury": list(),
+            "mind": None,
+            "physical": None,
+            "injury": None,
         }
     }
     crud.create_cr(cr=Models.Condition(**cr), db=db)
 
 
 @router.post("/write/{user_id}")
-async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)):
+async def write(user_id: str, wdate: str, key_type: str, content: str, db: Session = Depends(get_db)):
     """
     :param db: Connection to database. This field is not needed.\n
     :param user_id: User_id of the owner of the record.\n
@@ -75,8 +58,16 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     'mind'/'physical'/'injury' values must be given in list, containing all information, not just new value.\n
     :return: 200Ok on Success.\n
     """
+    try:
+        d = convert_date(wdate).get("date")
+        if d is None:
+            raise ValueError
+        if key_type in ["mind", "physical", "injury"]:
+            if not (content.startswith("[") and content.endswith("]")):
+                raise ValueError
+    except ValueError:
+        return {"Error": "Invalid value"}
 
-    d = convert_date(wdate).get("date")
     try:
         tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
         cr_record = crud.read_cr(db=db, user_id=user_id, wdate=d, number=1)
@@ -91,6 +82,7 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
         # updating part
         tr = tr_record[0]
         cr = cr_record[0]
+
         # training data
         if key_type == "train_detail":
             detail = {"content": content}
@@ -105,40 +97,15 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
             url = tr.content.get("failure").get("image")
             failure = {"content": content, "image": url}
             tr.content["failure"] = failure
+
         # conditioning data
         elif key_type == "mind":
             cr.content["mind"] = content
-            """
-            mind = cr.content.get("mind")
-            if len(mind) == 1:
-                mind[0] = content
-                cr.content["mind"] = mind
-            else:
-                mind.append(content)
-                cr.content["mind"] = mind
-            """
         elif key_type == "physical":
             cr.content["physical"] = content
-            """
-            if len(physical) == 1:
-                physical[0] = content[0]
-                cr.content["physical"] = physical
-            else:
-                for elem in content:
-                    physical.append(elem)
-                cr.content["physical"] = physical
-            """
         elif key_type == "injury":
             cr.content["injury"] = content
-            """
-            injury = cr.content.get("injury")
-            if len(injury) == 1:
-                injury[0] = content
-                cr.content["injury"] = injury
-            else:
-                injury.append(content)
-                cr.content["injury"] = injury
-            """
+
         crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
         crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)
 
@@ -149,45 +116,12 @@ async def write(user_id, wdate, key_type, content, db: Session = Depends(get_db)
     return {"status": "200OK"}
 
 
-@router.post("/debug/{user_id}")
-async def write(user_id, wdate, key_type, db: Session = Depends(get_db)):
-    content = ["Yee", "스트레칭을 충분히 못했어요", "무리한 훈련을 했어요", "체중이 늘었어요"]
-
-    d = convert_date(wdate).get("date")
-    tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
-    cr_record = crud.read_cr(db=db, user_id=user_id, wdate=d, number=1)
-    # initializing part: create record if there isn't one.
-    if len(tr_record) == 0:
-        initialize_t(user_id=user_id, wdate=d, db=db)
-        tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
-    if len(cr_record) == 0:
-        initialize_c(user_id=user_id, wdate=d, db=db)
-        cr_record = crud.read_cr(db=db, user_id=user_id, wdate=d, number=1)
-
-    tr = tr_record[0]
-    cr = cr_record[0]
-    if key_type == "physical":
-        cr.content["physical"] = content
-        """
-        physical = cr.content.get("physical")
-        if len(physical) == 1:
-            physical[0] = content[0]
-            cr.content["physical"] = physical
-        else:
-            for elem in content:
-                physical.append(elem)
-            cr.content["physical"] = physical
-        """
-    crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
-    crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)
-
-
 @router.get("/get/{user_id}")
-async def read(user_id, date, db: Session = Depends(get_db)):
+async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
     """
     sample = {\n
-        "date": 'Fri Nov 05 2021',\n
-        "date": "2021-11-15",\n
+        "date": 'Fri Nov 15 2021',\n
+        ("date": "2021-11-15")\n
         "noteContentGroup": {\n
             "training": {\n
                 "train_detail": "노트내용",\n
@@ -211,12 +145,14 @@ async def read(user_id, date, db: Session = Depends(get_db)):
             return {"user not found"}
     except SQLAlchemyError:
         return {"Error": "Operation Failed."}
-    except Exception:
-        pass
+    except Exception as e:
+        return {"Error:": e}
     else:
         try:
-            d = datetime.strptime(date, '%a %b %d %Y').date()
+            d = datetime.strptime(wdate, '%a %b %d %Y').date()
+
             tr = crud.read_tr(user_id=user_id, wdate=d, db=db, number=1)
+            # set default return message if record doesn't exist.
             if len(tr) == 0 or tr is None:
                 training = {
                     "train_detail": {"content": None},
@@ -228,8 +164,10 @@ async def read(user_id, date, db: Session = Depends(get_db)):
             else:
                 training = tr[0].content
                 feedback = tr[0].feedback
+            training["feedback"] = feedback
 
             cr = crud.read_cr(user_id=user_id, wdate=d, db=db, number=1)
+            # set default return message if record doesn't exist.
             if len(cr) == 0 or cr is None:
                 conditioning = {
                     "mind": [],
@@ -248,9 +186,16 @@ async def read(user_id, date, db: Session = Depends(get_db)):
             else:
                 conditioning = cr[0].content
 
-            training["feedback"] = feedback
+            mind = simple_parser(conditioning.get("mind", "[]"))
+            physical = simple_parser(conditioning.get("physical", "[]"))
+            injury = complex_parser(conditioning.get("injury", "[]"))
+
+            conditioning["mind"] = mind
+            conditioning["physical"] = physical
+            conditioning["injury"] = injury
+
             res = {
-                "date": date,
+                "date": wdate,
                 "noteContentGroup": {
                     "training": training,
                     "conditioning": conditioning,

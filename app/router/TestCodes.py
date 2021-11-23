@@ -8,8 +8,8 @@ from app.database.conn import get_db, get_s3
 from app.config.config import BUCKET_NAME
 from app.database.Models import Profile
 from datetime import datetime
-from app.router.Record import convert_date
-
+from ..util import convert_date
+from ..router.Record import initialize_c, initialize_t
 
 router = APIRouter(
     prefix="/test",
@@ -113,8 +113,68 @@ async def upload_img(user_id: str, image_type: str, wdate,
                 d = convert_date(wdate).get("date")
                 old_tr = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)[0]
                 tr_content = old_tr.content
-                success = tr_content.get("success").get("content")
-                tr_content["success"] = {"content": success, "image": image_urls}
+                if image_type == "success":
+                    success = tr_content.get("success").get("content")
+                    tr_content["success"] = {"content": success, "image": image_urls}
+                else:
+                    failure = tr_content.get("failure").get("content")
+                    tr_content["failure"] = {"content": failure, "image": image_urls}
                 crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=old_tr.feedback)
 
     return {"status": "200"}
+
+
+@router.post("/debug/{user_id}")
+async def write(user_id: str, wdate: str, key_type: str, content, db: Session = Depends(get_db)):
+    """
+    for my use only
+    :param user_id:
+    :param wdate:
+    :param key_type:
+    :param content:
+    :param db:
+    :return:
+    """
+    # content = ["Yee", "스트레칭을 충분히 못했어요", "무리한 훈련을 했어요", "체중이 늘었어요"]
+    try:
+        if type(user_id) != str:
+            raise ValueError
+        if type(wdate) != str:
+            raise ValueError
+        if type(key_type) != str:
+            raise ValueError
+    except (ValueError, TypeError) as e:
+        print(e)
+        return {"error": e}
+    print(type(content))
+
+    d = convert_date(wdate).get("date")
+    if d is None:
+        return {"Error": "Invalid date value."}
+
+    tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
+    cr_record = crud.read_cr(db=db, user_id=user_id, wdate=d, number=1)
+    # initializing part: create record if there isn't one.
+    if len(tr_record) == 0:
+        initialize_t(user_id=user_id, wdate=d, db=db)
+        tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
+    if len(cr_record) == 0:
+        initialize_c(user_id=user_id, wdate=d, db=db)
+        cr_record = crud.read_cr(db=db, user_id=user_id, wdate=d, number=1)
+
+    tr = tr_record[0]
+    cr = cr_record[0]
+    if key_type == "physical":
+        cr.content["physical"] = content
+        """
+        physical = cr.content.get("physical")
+        if len(physical) == 1:
+            physical[0] = content[0]
+            cr.content["physical"] = physical
+        else:
+            for elem in content:
+                physical.append(elem)
+            cr.content["physical"] = physical
+        """
+    crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
+    crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)

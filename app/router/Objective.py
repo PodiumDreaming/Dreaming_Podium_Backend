@@ -3,6 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.database import crud, Models
 from app.database.conn import get_db
+from ..util import simple_parser, complex_parser
 
 
 router = APIRouter(
@@ -131,10 +132,14 @@ async def get_objective(user_id: str, db: Session = Depends(get_db)):
         }
         return default
     else:
+        objectives = simple_parser(obj.objectives)
+        requirements = simple_parser(obj.requirements)
+        efforts = simple_parser(obj.efforts)
+        routines = simple_parser(obj.routines)
         return {
             "user_id": user_id,
-            "objectives": obj.objectives,
-            "requirements": obj.requirements,
-            "efforts": obj.efforts,
-            "routines": obj.routines,
+            "objectives": objectives,
+            "requirements": requirements,
+            "efforts": efforts,
+            "routines": routines,
         }

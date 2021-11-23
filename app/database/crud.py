@@ -165,7 +165,7 @@ def update_objective(db: Session, obj: Models.Objectives):
     if user_obj is None:
         return False
     else:
-        user_obj.objective = obj.objectives
+        user_obj.objectives = obj.objectives
         user_obj.requirements = obj.requirements
         user_obj.efforts = obj.efforts
         user_obj.routines = obj.routines
