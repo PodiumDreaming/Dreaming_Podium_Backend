@@ -50,7 +50,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: str, db: Sessi
     :param wdate: Date of the record. Must be something like 'Fri Nov 05 2021'\n
     :param key_type: Identifier of Updating part of the record.\n
     key_type must be one of:\n
-    "train_detail", "routines", "success", "failure", "mind", "physical", "injury"\n
+    "train_detail", "routines", "success", "failure", "feedback", "mind", "physical", "injury"\n
     :param content: Writing content\n
     content: Updating value.\n
     'routines' value must contain all routines involved in 'routines', not just new value.\n
@@ -97,6 +97,9 @@ async def write(user_id: str, wdate: str, key_type: str, content: str, db: Sessi
             url = tr.content.get("failure").get("image")
             failure = {"content": content, "image": url}
             tr.content["failure"] = failure
+        elif key_type == "feedback":
+            feedback = {"content": content}
+            tr.content["train_detail"] = feedback
 
         # conditioning data
         elif key_type == "mind":
@@ -149,14 +152,14 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
         return {"Error:": e}
     else:
         try:
-            d = datetime.strptime(wdate, '%a %b %d %Y').date()
+            d = convert_date(wdate).get("date")
 
             tr = crud.read_tr(user_id=user_id, wdate=d, db=db, number=1)
             # set default return message if record doesn't exist.
             if len(tr) == 0 or tr is None:
                 training = {
                     "train_detail": {"content": None},
-                    "routines": None,
+                    "routines": [],
                     "success": {"content": None, "image": None},
                     "failure": {"content": None, "image": None},
                 }

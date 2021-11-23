@@ -14,7 +14,7 @@ router = APIRouter(
 
 
 @router.post("/create_objectives/{user_id}")
-async def create_objective(user_id: str, objectives, requirements, efforts, routines, db: Session = Depends(get_db)):
+async def create_objective(user_id: str, objectives: str, requirements: str, efforts: str, routines: str, db: Session = Depends(get_db)):
     """
     API to create or update objectives of a user.\n
     :param user_id: user_id of user.\n
