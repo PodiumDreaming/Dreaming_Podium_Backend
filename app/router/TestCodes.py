@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, File, UploadFile
 from typing import List
+from pydantic import BaseModel
 import os
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -16,6 +17,13 @@ router = APIRouter(
     tags=["기능테스트용"],
     dependencies=[],
 )
+
+
+class Test(BaseModel):
+    name: str
+    power: int
+    profile: dict
+    hobby: list
 
 # saveno = 1
 """
@@ -125,7 +133,7 @@ async def upload_img(user_id: str, image_type: str, wdate,
 
 
 @router.post("/debug/{user_id}")
-async def write(user_id: str, wdate: str, key_type: str, content, db: Session = Depends(get_db)):
+async def write(user_id: str, wdate: str, key_type: str, content: Test, db: Session = Depends(get_db)):
     """
     for my use only
     :param user_id:
@@ -135,7 +143,7 @@ async def write(user_id: str, wdate: str, key_type: str, content, db: Session = 
     :param db:
     :return:
     """
-    # content = ["Yee", "스트레칭을 충분히 못했어요", "무리한 훈련을 했어요", "체중이 늘었어요"]
+    # content = ["Sit up", "스트레칭을 충분히 못했어요", "무리한 훈련을 했어요", "체중이 늘었어요"]
     try:
         if type(user_id) != str:
             raise ValueError
@@ -166,15 +174,6 @@ async def write(user_id: str, wdate: str, key_type: str, content, db: Session = 
     cr = cr_record[0]
     if key_type == "physical":
         cr.content["physical"] = content
-        """
-        physical = cr.content.get("physical")
-        if len(physical) == 1:
-            physical[0] = content[0]
-            cr.content["physical"] = physical
-        else:
-            for elem in content:
-                physical.append(elem)
-            cr.content["physical"] = physical
-        """
+
     crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
     crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)

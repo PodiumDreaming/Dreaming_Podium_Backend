@@ -41,19 +41,17 @@ async def create_objective(user_id: str, objectives: str, requirements: str, eff
             # This will overwrite all attributes.
             crud.update_objective(db=db, obj=Models.Objectives(**new))
             record = new
-
+        return {"Status": "200OK",
+                "objective": record}
     except SQLAlchemyError as sql:
         return {"Status": "DB error.",
                 "Detail": sql}
     except KeyError:
         return {"Status": "KeyError: could not find key from the given data."}
-    else:
-        return {"Status": "200OK",
-                "objective": record}
 
 
 @router.post("/update_objectives/{user_id}")
-async def update_objective(user_id: str, keyword: str, content, db: Session = Depends(get_db)):
+async def update_objective(user_id: str, keyword: str, content: str, db: Session = Depends(get_db)):
     """
     API to update specific attribute of an objective of a user.\n
     :param user_id: user_id of user.\n
@@ -98,6 +96,7 @@ async def update_objective(user_id: str, keyword: str, content, db: Session = De
                     routines=old.routines)
 
             else:
+                # routines
                 new = Models.Objectives(
                     user_id=user_id,
                     objectives=old.objectives,
@@ -105,6 +104,7 @@ async def update_objective(user_id: str, keyword: str, content, db: Session = De
                     efforts=old.efforts,
                     routines=content)
             crud.update_objective(db=db, obj=new)
+
     except SQLAlchemyError:
         return {"Status": "DB error."}
     except KeyError:

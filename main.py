@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.router import KaKao, Account, Record, TestCodes, Profile, Objective
+from app.router import KaKao, Account, Record, TestCodes, Profile, Objective, Apple
 from app.database import Tables
 from app.database.conn import engine
 
@@ -21,6 +21,7 @@ def init_app():
     app.include_router(Objective.router)
     app.include_router(Record.router)
     app.include_router(TestCodes.router)
+    app.include_router(Apple.router)
     origins = [
         "http://localhost:3000",
         "localhost:3000"

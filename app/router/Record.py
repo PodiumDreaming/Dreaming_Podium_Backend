@@ -20,7 +20,7 @@ def initialize_t(user_id, wdate, db):
         "written": wdate,
         "content": {
             "train_detail": None,
-            "routines": None,
+            "routines": "[]",
             "success": {"content": None, "image": None},
             "failure": {"content": None, "image": None},
         },
@@ -34,9 +34,9 @@ def initialize_c(user_id, wdate, db):
         "user_id": user_id,
         "written": wdate,
         "content": {
-            "mind": None,
-            "physical": None,
-            "injury": None,
+            "mind": "[]",
+            "physical": "[]",
+            "injury": "[]",
         }
     }
     crud.create_cr(cr=Models.Condition(**cr), db=db)
@@ -122,6 +122,13 @@ async def write(user_id: str, wdate: str, key_type: str, content: str, db: Sessi
 @router.get("/get/{user_id}")
 async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
     """
+
+    :param user_id: User_id of the owner of the record.\n
+    :param wdate: Date of the record. Must be something like 'Fri Nov 05 2021'\n
+    :param db: This field is not required.\n
+    :return: User record of given date.
+    """
+    """
     sample = {\n
         "date": 'Fri Nov 15 2021',\n
         ("date": "2021-11-15")\n
@@ -188,7 +195,6 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 }
             else:
                 conditioning = cr[0].content
-
             mind = simple_parser(conditioning.get("mind", "[]"))
             physical = simple_parser(conditioning.get("physical", "[]"))
             injury = complex_parser(conditioning.get("injury", "[]"))

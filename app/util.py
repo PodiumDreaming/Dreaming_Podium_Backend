@@ -3,10 +3,12 @@ from datetime import datetime
 
 
 def simple_parser(target: str):
+    if target == "[]":
+        return []
     target = target.replace('"', "")
     target = target.replace("'", "")
     if target.startswith("[") and target.endswith("]"):
-        target = target.lstrip("[").rstrip("]")
+        target = target.replace("[", '').replace("]", '')
         if target.find(","):
             target = target.replace(", ", ",")
             result = target.split(",")
@@ -21,34 +23,50 @@ def simple_parser(target: str):
     return result
 
 
+# Warning: This function is specifically made to work with several cases.
+# This function is not for general case.
+# target will normally be "[]" or "[{some: data}, {some: data}]"
 def complex_parser(target: str):
     res = []
+    target = target.strip()
     target = target.replace('"', "")
     target = target.replace("'", "")
     target = target.replace("}, {", "},{")
+    target = target.replace("} ,{", "},{")
+    target = target.replace(" , ", ",")
     while True:
         if target.startswith("[") and target.endswith("]"):
             target = target.lstrip("[").rstrip("]")
+            target = target.strip()
             continue
         if target.startswith("{") and target.endswith("}"):
             target = target.lstrip("{").rstrip("}")
+            target = target.strip()
             continue
         if target.endswith(","):
             target = target.rstrip(",")
+            target = target.strip()
             continue
         if target.find("}.{"):
             l1 = target.split("},{")
-            if len(l1) == 1:
+            if len(l1) == 1 and l1[0] == "":
+                return res
+        else:
+            target.find(",")
+            l1 = target.split(",")
+            if len(l1) == 1 and l1[0] == "":
                 return res
         break
 
     for i in range(len(l1)):
+        l1[i].strip()
         l1[i] = l1[i].replace(", ", ",")
         l1[i] = l1[i].replace(": ", ":")
         l2 = l1[i].split(',')
         keys = []
         values = []
         for elem in l2:
+            elem = elem.strip()
             l3 = elem.split(":")
             keys.append(l3[0])
             values.append(l3[1])
