@@ -1,6 +1,6 @@
 from datetime import datetime, date, timezone
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON
-from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON, PickleType
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 # from sqlalchemy.orm import relationship
 
 from .conn import Base
@@ -58,7 +58,7 @@ class Objective(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String(256), ForeignKey("users.user_id"), primary_key=True)
-    objectives = Column(String(128), nullable=True)
-    requirements = Column(String(256), nullable=True)
-    efforts = Column(String(256), nullable=True)
-    routines = Column(String(256), nullable=True)
+    objectives = Column(MutableList.as_mutable(PickleType), default=[])
+    requirements = Column(MutableList.as_mutable(PickleType), default=[])
+    efforts = Column(MutableList.as_mutable(PickleType), default=[])
+    routines = Column(MutableList.as_mutable(PickleType), default=[])

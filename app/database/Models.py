@@ -76,23 +76,10 @@ class Objectives(BaseModel):
     routines: 루틴\n
     """
     user_id: str
-    objectives: Optional[str]
-    requirements: Optional[str]
-    efforts: Optional[str]
-    routines: Optional[str]
+    objectives: Optional[List[str]] = None
+    requirements: Optional[List[str]] = None
+    efforts: Optional[List[str]] = None
+    routines: Optional[List[str]] = None
 
     class Config:
         orm_mode = True
-
-
-"""
-class Image(BaseModel):
-    img_name: str
-    url: str
-    user_id: str
-    written: date
-    last_modified: Optional[datetime]
-
-    class Config:
-        orm_mode = True
-"""
