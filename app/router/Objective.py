@@ -7,6 +7,7 @@ from datetime import date
 from typing import List
 from ..database import Models
 
+
 router = APIRouter(
     prefix="/objective",
     tags=["목표설정"],
