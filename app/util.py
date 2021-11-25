@@ -79,6 +79,9 @@ def complex_parser(target: str):
     return res
 
 
+# Convert input data into datetime.date form.
+# Works even if day is incorrect(Monday, Tuesday, etc), since the function detects today's date.
+# e.g)) Fri Nov 26 2021 -> datetime(2021,11,26)
 def convert_date(date):
     try:
         d = datetime.strptime(date, '%a %b %d %Y').date()

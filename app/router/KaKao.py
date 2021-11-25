@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 import requests
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..config.config import kakao_client, callback_url
 from ..database import Models, crud
@@ -27,7 +27,7 @@ def kakao_signin(info, db):
     name = profile.get("nickname", None)
     gender = kakao_account.get("gender", None)
     # email = kakao_account.get("email", None)
-    reg_date = datetime.now().astimezone()
+    reg_date = datetime.now(tz=timezone.utc).astimezone()
     acc_type = "KAKAO"
 
     password = get_password_hash(user_id)
@@ -40,22 +40,11 @@ def kakao_signin(info, db):
         "register_date": reg_date,
         "acc_type": acc_type,
     }
-    """
-    user_profile = {
-        "user_id": user_id,
-        "name": name,
-        "gender": gender,
-        "team": None,
-        "field": None,
-        "profile_image": None,
-    }
-    """
-    user = Models.User(**user_data)
+
+    # user = Models.User(**user_data)
     user_db = Models.UserFull(**user_data, password=password)
     crud.create_user(db=db, user=user_db)
 
-    # profile = Models.Profile(**user_profile)
-    # crud.create_profile(db=db, profile=profile)
     return {"user_id": user_id}
 
 

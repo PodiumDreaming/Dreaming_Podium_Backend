@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
-from datetime import datetime
 from ..database import Models, crud
 from app.database.conn import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-
+from typing import Optional, List, Union
 from ..util import simple_parser, complex_parser, convert_date
 
 router = APIRouter(
@@ -14,13 +13,14 @@ router = APIRouter(
 )
 
 
+# Create default training record.
 def initialize_t(user_id, wdate, db):
     tr = {
         "user_id": user_id,
         "written": wdate,
         "content": {
             "train_detail": None,
-            "routines": "[]",
+            "routines": [],
             "success": {"content": None, "image": None},
             "failure": {"content": None, "image": None},
         },
@@ -29,33 +29,43 @@ def initialize_t(user_id, wdate, db):
     crud.create_tr(tr=Models.Training(**tr), db=db)
 
 
+# Create default conditioning record.
 def initialize_c(user_id, wdate, db):
     cr = {
         "user_id": user_id,
         "written": wdate,
         "content": {
-            "mind": "[]",
-            "physical": "[]",
-            "injury": "[]",
+            "mind": [],
+            "physical": [],
+            "injury": [],
         }
     }
     crud.create_cr(cr=Models.Condition(**cr), db=db)
 
 
+# Create/overwrites tr/cr record of given date.
 @router.post("/write/{user_id}")
-async def write(user_id: str, wdate: str, key_type: str, content: str, db: Session = Depends(get_db)):
+async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dict, list[str], list[dict]],
+                db: Session = Depends(get_db)):
     """
     :param db: Connection to database. This field is not needed.\n
-    :param user_id: User_id of the owner of the record.\n
-    :param wdate: Date of the record. Must be something like 'Fri Nov 05 2021'\n
-    :param key_type: Identifier of Updating part of the record.\n
-    key_type must be one of:\n
-    "train_detail", "routines", "success", "failure", "feedback", "mind", "physical", "injury"\n
+    :param user_id: str\n
+     - User_id of the owner of the record.\n
+    :param wdate: str\n
+     - Date of the record. Must be something like 'Fri Nov 05 2021'\n
+    :param key_type: str\n
+     - Identifier of Updating part of the record. key_type must be one of:\n
+        "train_detail" :
+        "routines" :
+        "success" :
+        "failure":
+        "feedback":
+        "mind"
+        "physical"
+        "injury"\n
     :param content: Writing content\n
     content: Updating value.\n
-    'routines' value must contain all routines involved in 'routines', not just new value.\n
-    e.g)) {"routine1_name": True, "routine2_name": False, "routine3_name": True}\n
-    'mind'/'physical'/'injury' values must be given in list, containing all information, not just new value.\n
+    Type of content should be one of [ str, dict, list[str], list[dict]]
     :return: 200Ok on Success.\n
     """
     try:
@@ -63,7 +73,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: str, db: Sessi
         if d is None:
             raise ValueError
         if key_type in ["mind", "physical", "injury"]:
-            if not (content.startswith("[") and content.endswith("]")):
+            if type(content) != list:
                 raise ValueError
     except ValueError:
         return {"Error": "Invalid value"}
@@ -119,7 +129,8 @@ async def write(user_id: str, wdate: str, key_type: str, content: str, db: Sessi
     return {"status": "200OK"}
 
 
-@router.get("/get/{user_id}")
+# Read tr/cr record of given user_id and given date.
+@router.get("/read/{user_id}")
 async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
     """
 
@@ -130,8 +141,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
     """
     """
     sample = {\n
-        "date": 'Fri Nov 15 2021',\n
-        ("date": "2021-11-15")\n
+        "wdate": 'Fri Nov 15 2021',\n
         "noteContentGroup": {\n
             "training": {\n
                 "train_detail": "노트내용",\n
@@ -195,13 +205,6 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 }
             else:
                 conditioning = cr[0].content
-            mind = simple_parser(conditioning.get("mind", "[]"))
-            physical = simple_parser(conditioning.get("physical", "[]"))
-            injury = complex_parser(conditioning.get("injury", "[]"))
-
-            conditioning["mind"] = mind
-            conditioning["physical"] = physical
-            conditioning["injury"] = injury
 
             res = {
                 "date": wdate,

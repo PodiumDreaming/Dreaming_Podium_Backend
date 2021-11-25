@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 import jwt
 from datetime import datetime, timedelta, timezone
-
-from ..config.config import SOCIAL_AUTH_APPLE_KEY_ID, SOCIAL_AUTH_APPLE_TEAM_ID, SOCIAL_AUTH_APPLE_PRIVATE_KEY, \
-    CLIENT_ID
+from .Account import get_password_hash
+from ..config.config import SOCIAL_AUTH_APPLE_KEY_ID, SOCIAL_AUTH_APPLE_TEAM_ID, CLIENT_ID
 from ..database import Models, crud
 from ..database.conn import get_db
 
@@ -17,6 +17,9 @@ router = APIRouter(
 
 
 def get_client_secret():
+    with open("./app/config/AuthKey_X2H4DX2778.p8", "rb") as fp:
+        SOCIAL_AUTH_APPLE_PRIVATE_KEY = fp.read()
+
     headers = {
         'kid': SOCIAL_AUTH_APPLE_KEY_ID,
         'alg': "ES256"
@@ -33,10 +36,15 @@ def get_client_secret():
     client_secret = jwt.encode(
         payload,
         SOCIAL_AUTH_APPLE_PRIVATE_KEY,
-        algorithm='RS256',
+        algorithm='ES256',
         headers=headers
     )
     return client_secret
+
+
+def verify_user(identity_code: str):
+    public_codes = requests.post("https://appleid.apple.com/auth/keys")
+    pass
 
 
 def authorize(access_token, client_secret=Depends(get_client_secret)):
@@ -53,15 +61,58 @@ def authorize(access_token, client_secret=Depends(get_client_secret)):
 
     res = requests.post('https://appleid.apple.com/auth/token', data=data, headers=headers)
     response = res.json()
+    return response
+
+
+def sign_in(payload: dict, db):
+    if 'sub' in payload:
+        user_id = "AP" + payload['sub']
+
+        try:
+            user = crud.read_user(db=db, user_id=user_id)
+            if user is not None:
+                return user.user_id
+
+            reg_date = datetime.now(tz=timezone.utc).astimezone()
+            acc_type = "APPLE"
+            password = get_password_hash(user_id)
+
+            user_data = {
+                "user_id": user_id,
+                "name": None,
+                "gender": None,
+                # "email": email,
+                "register_date": reg_date,
+                "acc_type": acc_type,
+            }
+            user_db = Models.UserFull(**user_data, password=password)
+            crud.create_user(db=db, user=user_db)
+            return {"user_id": user_id}
+
+        except SQLAlchemyError:
+            return {"Error": "SQL operation failed."}
+
+
+@router.post("/create_user")
+async def register(codes: dict, db: Session = Depends(get_db)):
+    authorize_code = codes.get("authorizationCode")
+    identity_code = codes.get("identityToken")
+
+    verify_user(identity_code)
+
+    response = authorize(authorize_code)
+    if response.get("error", None):
+        return {"Error": "Authentication failed."}
+
     id_token = response.get("id_token", None)
 
     if id_token:
         payload = jwt.decode(id_token, '')
-        if 'sub' in payload:
-            user_id = payload['sub']
-            return user_id
+        return sign_in(payload, db)
+    else:
+        return {"Error": "Could not receive user information."}
 
 
-@router.post("/register")
-async def register():
+@router.get("/jwt_test/")
+async def encoding_test():
     return get_client_secret()

@@ -13,37 +13,6 @@ router = APIRouter(
 )
 
 
-@router.get("/read_profile/{user_id}")
-async def get_profile(user_id: str, db: Session = Depends(get_db)):
-    """
-        API to get user's profile.\n
-        :param user_id: user's user_id.\n
-        :param db: This field is not required.
-    """
-    profile = crud.read_profile(db=db, user_id=user_id)
-    if profile is None:
-        default = {
-            "user_id": user_id,
-            "name": None,
-            "gender": None,
-            "birthday": None,
-            "team": None,
-            "field": None,
-            "profile_image": None,
-        }
-        return default
-    else:
-        return {
-            "user_id": user_id,
-            "name": profile.name,
-            "gender": profile.gender,
-            "birthday": profile.birthday,
-            "team": profile.team,
-            "field": profile.field,
-            "profile_image": profile.profile_image,
-        }
-
-
 @router.post("/create_profile/{user_id}")
 async def make_profile(user_id: str,
                        name: str,
@@ -88,6 +57,37 @@ async def make_profile(user_id: str,
     else:
         return {"Status": "Profile already exists.",
                 "profile": old}
+
+
+@router.get("/read_profile/{user_id}")
+async def get_profile(user_id: str, db: Session = Depends(get_db)):
+    """
+        API to get user's profile.\n
+        :param user_id: user's user_id.\n
+        :param db: This field is not required.
+    """
+    profile = crud.read_profile(db=db, user_id=user_id)
+    if profile is None:
+        default = {
+            "user_id": user_id,
+            "name": None,
+            "gender": None,
+            "birthday": None,
+            "team": None,
+            "field": None,
+            "profile_image": None,
+        }
+        return default
+    else:
+        return {
+            "user_id": user_id,
+            "name": profile.name,
+            "gender": profile.gender,
+            "birthday": profile.birthday,
+            "team": profile.team,
+            "field": profile.field,
+            "profile_image": profile.profile_image,
+        }
 
 
 @router.post("/update_profile/{user_id}")

@@ -38,7 +38,7 @@ class Profile(BaseModel):
     birthday: Optional[date]
     team: Optional[str]
     field: Optional[str]
-    profile_image: Optional[dict]
+    profile_image: Optional[list]
 
 
 class Record(BaseModel):

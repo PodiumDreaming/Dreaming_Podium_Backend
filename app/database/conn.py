@@ -18,6 +18,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+# get database session.
 def get_db():
     db = SessionLocal()
     try:
@@ -26,6 +27,7 @@ def get_db():
         db.close()
 
 
+# get AWS S3 server session.
 def get_s3():
     s3 = boto3.client('s3',
                       aws_access_key_id=config.AWS_ACCESS_KEY,
