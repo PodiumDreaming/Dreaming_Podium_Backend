@@ -45,7 +45,7 @@ def initialize_c(user_id, wdate, db):
 
 # Create/overwrites tr/cr record of given date.
 @router.post("/write/{user_id}")
-async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dict, list[str], list[dict]],
+async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dict, List[str], List[dict]],
                 db: Session = Depends(get_db)):
     """
     :param db: Connection to database. This field is not needed.\n
