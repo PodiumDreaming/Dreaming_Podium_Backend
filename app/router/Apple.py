@@ -111,6 +111,8 @@ async def register(codes: dict, db: Session = Depends(get_db)):
 
     response = authorize(authorize_code)
     if response.get("error", None):
+        print("Apple login auth failed.")
+        print(response.get("error"))
         return {"Error": "Authentication failed."}
 
     id_token = response.get("id_token", None)
