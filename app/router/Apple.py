@@ -9,7 +9,6 @@ from ..config.config import SOCIAL_AUTH_APPLE_KEY_ID, SOCIAL_AUTH_APPLE_TEAM_ID,
 from ..database import Models, crud
 from ..database.conn import get_db
 
-
 router = APIRouter(
     tags=["Apple"],
     dependencies=[],
@@ -48,14 +47,14 @@ def verify_user(identity_code: str):
     pass
 
 
-def authorize(access_token, client_secret=Depends(get_client_secret)):
+def authorize(authorization_code, client_secret=Depends(get_client_secret)):
     client_id = CLIENT_ID
 
     headers = {'content-type': "application/x-www-form-urlencoded"}
     data = {
         'client_id': client_id,
         'client_secret': client_secret,
-        'code': access_token,
+        'code': authorization_code,
         'grant_type': 'authorization_code',
         'redirect_uri': "",
     }
@@ -109,7 +108,7 @@ async def register(codes: dict, db: Session = Depends(get_db)):
 
     verify_user(identity_code)
 
-    response = authorize(authorize_code)
+    response = authorize(authorization_code=authorize_code)
     if response.get("error", None):
         print("Apple login auth failed.")
         print(response.get("error"))
