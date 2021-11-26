@@ -20,9 +20,7 @@ def kakao_signin(info, db):
     profile = kakao_account.get("profile")
 
     user_id = "KA" + str(info.get("id", None))
-    print(user_id)
     user = crud.read_user(db=db, user_id=user_id)
-    print(user)
     if user is not None:
         return user.user_id
 
@@ -47,7 +45,7 @@ def kakao_signin(info, db):
     user_db = Models.UserFull(**user_data, password=password)
     crud.create_user(db=db, user=user_db)
 
-    return {"user_id": user_id}
+    return user_id
 
 
 @router.get("/kakao/me", response_model=Models.User)

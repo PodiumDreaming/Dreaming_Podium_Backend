@@ -45,8 +45,6 @@ def get_client_secret():
 def verify_user(identity_code: str):
     response = requests.post("https://appleid.apple.com/auth/keys")
     public_keys = response.json().get("Keys")
-
-
     pass
 
 
@@ -90,7 +88,7 @@ def sign_in(payload: dict, db):
             }
             user_db = Models.UserFull(**user_data, password=password)
             crud.create_user(db=db, user=user_db)
-            return {"user_id": user_id}
+            return user_id
 
         except SQLAlchemyError:
             return {"Error": "SQL operation failed."}
