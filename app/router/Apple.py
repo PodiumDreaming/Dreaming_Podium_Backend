@@ -39,6 +39,7 @@ def get_client_secret():
         algorithm='ES256',
         headers=headers
     )
+
     return client_secret
 
 

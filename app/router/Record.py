@@ -65,7 +65,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         "injury"\n
     :param content: Writing content\n
     content: Updating value.\n
-    Type of content should be one of [ str, dict, list[str], list[dict]]
+    Type of content should be one of [str, dict, list[str], list[dict]]
     :return: 200Ok on Success.\n
     """
     try:
@@ -110,7 +110,6 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         elif key_type == "feedback":
             feedback = {"content": content}
             tr.content["train_detail"] = feedback
-
         # conditioning data
         elif key_type == "mind":
             cr.content["mind"] = content

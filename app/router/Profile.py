@@ -34,8 +34,8 @@ async def make_profile(user_id: str,
         :param db: This field is not required.
         """
     old = crud.read_profile(db=db, user_id=user_id)
-    if old is None:
-        try:
+    try:
+        if old is None:
             d = convert_date(birthday).get("date")
             default = {
                 "user_id": user_id,
@@ -47,16 +47,29 @@ async def make_profile(user_id: str,
                 "profile_image": None,
             }
             record = crud.create_profile(db=db, profile=Models.Profile(**default))
-        except SQLAlchemyError:
-            return {"Status": "DB error."}
-        except KeyError:
-            return {"Status": "KeyError: could not find key from the given data."}
         else:
+            d = convert_date(birthday).get("date")
+            default = {
+                "user_id": user_id,
+                "name": name,
+                "gender": gender,
+                "birthday": d,
+                "team": team,
+                "field": field,
+                "profile_image": None,
+            }
+            crud.update_profile(db=db, profile=Models.Profile(**default))
             return {"Status": "200OK",
-                    "profile": record}
+                    "profile": default}
+
+    except SQLAlchemyError:
+        return {"Status": "DB error."}
+
+    except KeyError:
+        return {"Status": "KeyError: could not find key from the given data."}
     else:
-        return {"Status": "Profile already exists.",
-                "profile": old}
+        return {"Status": "200OK",
+                "profile": record}
 
 
 @router.get("/read_profile/{user_id}")
