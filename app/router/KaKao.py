@@ -20,7 +20,9 @@ def kakao_signin(info, db):
     profile = kakao_account.get("profile")
 
     user_id = "KA" + str(info.get("id", None))
+    print(user_id)
     user = crud.read_user(db=db, user_id=user_id)
+    print(user)
     if user is not None:
         return user.user_id
 
