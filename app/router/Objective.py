@@ -29,7 +29,7 @@ def sync_obj(user_id: str, routines, db: Session):
         crud.update_tr(db=db, user_id=user_id, wdate=today, content=tr.content, feedback=tr.feedback)
 
 
-@router.post("/create_objectives/")
+@router.post("/create_objectives")
 async def create_objective(content: Models.Objectives, db: Session = Depends(get_db)):
     """
     API to create or update objectives of a user.\n

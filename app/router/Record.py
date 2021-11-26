@@ -15,12 +15,20 @@ router = APIRouter(
 
 # Create default training record.
 def initialize_t(user_id, wdate, db):
+    try:
+        obj = crud.read_objective(db=db, user_id=user_id)
+        if obj:
+            routines = obj.routines
+        else:
+            routines = []
+    except SQLAlchemyError:
+        return {"Error": "SQL operation failed."}
     tr = {
         "user_id": user_id,
         "written": wdate,
         "content": {
             "train_detail": None,
-            "routines": [],
+            "routines": routines,
             "success": {"content": None, "image": None},
             "failure": {"content": None, "image": None},
         },
