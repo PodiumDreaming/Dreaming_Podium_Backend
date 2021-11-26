@@ -155,4 +155,10 @@ async def get_objective(user_id: str, db: Session = Depends(get_db)):
         }
         return default
     else:
-        return obj
+        res = {
+            "objectives": obj.objectives,
+            "requirements": obj.requirements,
+            "efforts": obj.efforts,
+            "routines": obj.routines,
+        }
+        return res

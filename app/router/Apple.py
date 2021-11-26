@@ -96,6 +96,14 @@ def sign_in(payload: dict, db):
 
 @router.post("/create_user")
 async def register(codes: dict, db: Session = Depends(get_db)):
+    """
+    Login with Appel Account.\n
+    :param codes: codes should be in dict form and include:\n
+        "authorizationCode": code
+        "identityToken": token
+    :param db: \n
+    :return:  \n
+    """
     authorize_code = codes.get("authorizationCode")
     identity_code = codes.get("identityToken")
 
