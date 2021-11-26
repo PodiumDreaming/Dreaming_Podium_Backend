@@ -56,7 +56,7 @@ async def make_profile(user_id: str,
                 "birthday": d,
                 "team": team,
                 "field": field,
-                "profile_image": None,
+                "profile_image": old.profile_image,
             }
             crud.update_profile(db=db, profile=Models.Profile(**default))
             return {"Status": "200OK",

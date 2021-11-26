@@ -33,12 +33,12 @@ class Profile(BaseModel):
     profile_image: 프로필 사진 url\n
     """
     user_id: str
-    name: str
-    gender: str
-    birthday: Optional[date]
-    team: Optional[str]
-    field: Optional[str]
-    profile_image: Optional[list]
+    name: Optional[str] = None
+    gender: Optional[str] = None
+    birthday: Optional[date] = None
+    team: Optional[str] = None
+    field: Optional[str] = None
+    profile_image: Optional[list] = None
 
 
 class Record(BaseModel):

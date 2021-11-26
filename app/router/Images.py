@@ -68,15 +68,21 @@ async def upload_img(user_id: str, image_type: str, wdate,
 
                 if image_type == "profile":
                     old_profile = crud.read_profile(db=db, user_id=user_id)
-                    new_profile = Profile(user_id=user_id,
-                                          name=old_profile.name,
-                                          gender=old_profile.gender,
-                                          birthday=old_profile.birthday,
-                                          team=old_profile.team,
-                                          field=old_profile.field,
-                                          profile_image=image_urls)
-                    crud.update_profile(db=db, profile=new_profile)
-                    log.update({f"file_{i}": "Success"})
+                    if old_profile:
+                        new_profile = Profile(user_id=user_id,
+                                              name=old_profile.name,
+                                              gender=old_profile.gender,
+                                              birthday=old_profile.birthday,
+                                              team=old_profile.team,
+                                              field=old_profile.field,
+                                              profile_image=image_urls)
+                        crud.update_profile(db=db, profile=new_profile)
+                        log.update({f"file_{i}": "Success"})
+                    else:
+                        new_profile = Profile(user_id=user_id,
+                                              profile_image=image_urls)
+                        crud.create_profile(db=db, profile=new_profile)
+                        log.update({f"file_{i}": "Success"})
                     break
                 else:
                     d = convert_date(wdate).get("date")

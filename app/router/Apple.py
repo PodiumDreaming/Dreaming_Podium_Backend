@@ -43,7 +43,10 @@ def get_client_secret():
 
 
 def verify_user(identity_code: str):
-    public_codes = requests.post("https://appleid.apple.com/auth/keys")
+    response = requests.post("https://appleid.apple.com/auth/keys")
+    public_keys = response.json().get("Keys")
+
+
     pass
 
 
