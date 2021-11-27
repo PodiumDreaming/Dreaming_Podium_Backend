@@ -18,7 +18,9 @@ def initialize_t(user_id, wdate, db):
     try:
         obj = crud.read_objective(db=db, user_id=user_id)
         if obj:
-            routines = obj.routines
+            routines = {}
+            for routine in obj.routines:
+                routines.update({routine: False})
         else:
             routines = []
     except SQLAlchemyError:
@@ -80,9 +82,6 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         d = convert_date(wdate).get("date")
         if d is None:
             raise ValueError
-        if key_type in ["mind", "physical", "injury"]:
-            if type(content) != list:
-                raise ValueError
     except ValueError:
         return {"Error": "Invalid value"}
 
@@ -105,24 +104,31 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         if key_type == "train_detail":
             detail = {"content": content}
             tr.content["train_detail"] = detail
+
         elif key_type == "routines":
             tr.content["routines"] = content
+
         elif key_type == "success":
             url = tr.content.get("success").get("image")
             success = {"content": content, "image": url}
             tr.content["success"] = success
+
         elif key_type == "failure":
             url = tr.content.get("failure").get("image")
             failure = {"content": content, "image": url}
             tr.content["failure"] = failure
+
         elif key_type == "feedback":
             feedback = {"content": content}
-            tr.content["train_detail"] = feedback
+            tr.content["feedback"] = feedback
+
         # conditioning data
         elif key_type == "mind":
             cr.content["mind"] = content
+
         elif key_type == "physical":
             cr.content["physical"] = content
+
         elif key_type == "injury":
             cr.content["injury"] = content
 
@@ -179,14 +185,22 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
             d = convert_date(wdate).get("date")
 
             tr = crud.read_tr(user_id=user_id, wdate=d, db=db, number=1)
-            # set default return message if record doesn't exist.
+            training = {
+                "train_detail": {"content": None},
+                "routines": None,
+                "success": {"content": None, "image": None},
+                "failure": {"content": None, "image": None},
+            }
+            # set training return message if record doesn't exist.
             if len(tr) == 0 or tr is None:
-                training = {
-                    "train_detail": {"content": None},
-                    "routines": [],
-                    "success": {"content": None, "image": None},
-                    "failure": {"content": None, "image": None},
-                }
+                obj = crud.read_objective(db=db, user_id=user_id)
+                if obj:
+                    routines = obj.routines
+                    if routines:
+                        r = {}
+                        for routine in routines:
+                            r.update({routine: False})
+
                 feedback = {"content": None}
             else:
                 training = tr[0].content
@@ -194,7 +208,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
             training["feedback"] = feedback
 
             cr = crud.read_cr(user_id=user_id, wdate=d, db=db, number=1)
-            # set default return message if record doesn't exist.
+            # set training return message if record doesn't exist.
             if len(cr) == 0 or cr is None:
                 conditioning = {
                     "mind": [],

@@ -127,3 +127,24 @@ async def register(codes: dict, db: Session = Depends(get_db)):
 @router.get("/jwt_test/")
 async def encoding_test():
     return get_client_secret()
+
+
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+
+
+@router.get("/test")
+def create_api_token(user_id: str):
+    headers = {
+        'typ': "JWT",
+        'alg': "HS256"
+    }
+    payload = {
+        'iss': "Wright",
+        'iat': datetime.now(tz=timezone.utc).astimezone(),
+        'exp': datetime.now(tz=timezone.utc).astimezone() + timedelta(minutes=5),
+        'aud': user_id,
+        'sub': "API Token",
+    }
+    encoded_jwt = jwt.encode(payload, SECRET_KEY, headers=headers, algorithm=ALGORITHM)
+    return encoded_jwt
