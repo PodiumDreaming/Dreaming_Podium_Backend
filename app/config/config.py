@@ -18,3 +18,7 @@ Local_Account = os.getenv("Local_Account")
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 BUCKET_NAME = os.getenv("S3_BUCKET")
+
+# JWT
+SECRET_KEY = "03e5b1dfdd5a642f60eb6275e32c98233320c0bfd8e4668b838cc1e8d4a22eeb"
+ALGORITHM = "HS256"

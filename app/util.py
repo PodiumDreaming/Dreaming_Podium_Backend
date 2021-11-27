@@ -1,7 +1,9 @@
-# parse and reform target string into list.
-from datetime import datetime
+from jose import jwt, JWTError
+from datetime import datetime, timezone, timedelta
+from .config.config import SECRET_KEY, ALGORITHM
 
 
+# Parse string data and convert into list.
 def simple_parser(target: str):
     if target == "[]":
         return []
@@ -97,3 +99,34 @@ def convert_date(date):
         detail = {"Exception": "Could not handle data. Check if data is valid."}
     result = {"date": d, "detail": detail}
     return result
+
+
+def create_api_token(user_id: str):
+    headers = {
+        'typ': "JWT",
+        'alg': ALGORITHM
+    }
+    payload = {
+        'iss': "Wright",
+        'iat': datetime.now(tz=timezone.utc).astimezone(),
+        'exp': datetime.now(tz=timezone.utc).astimezone() + timedelta(days=15),
+        'sub': "API Token",
+        "User": user_id
+    }
+    encoded_jwt = jwt.encode(payload, SECRET_KEY, headers=headers, algorithm=ALGORITHM)
+
+    # payload = jwt.decode(encoded_jwt, SECRET_KEY, algorithms=[ALGORITHM], audience=user_id)
+    # print(payload)
+    return encoded_jwt
+
+
+def token_verification(token, user_id: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if user_id != payload.get("User", None):
+            raise JWTError
+    except jwt.ExpiredSignatureError:
+        return False
+    except JWTError:
+        return False
+    return True

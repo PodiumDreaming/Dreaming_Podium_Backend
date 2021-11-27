@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from ..database import Models, crud
 from app.database.conn import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from typing import Optional, List, Union
-from ..util import simple_parser, complex_parser, convert_date
+from typing import List, Union
+from ..util import convert_date, token_verification
+
 
 router = APIRouter(
     prefix="/record",
@@ -238,3 +239,12 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
             return res
         except (TypeError, ValueError):
             return {"Check if user_id has valid value or date is in right format. Example: 'Fri Nov 05 2021'"}
+
+
+@router.get("token_test")
+async def test(user_id: str, token=Header(None)):
+    if not token_verification(token, user_id):
+        return {"Verification": "Failure"}
+    else:
+        return {"Verification": "Success"}
+

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 import requests
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-import jwt
+from jose import jwt
 from datetime import datetime, timedelta, timezone
 from .Account import get_password_hash
 from ..config.config import SOCIAL_AUTH_APPLE_KEY_ID, SOCIAL_AUTH_APPLE_TEAM_ID, CLIENT_ID
@@ -42,12 +42,6 @@ def get_client_secret():
     return client_secret
 
 
-def verify_user(identity_code: str):
-    response = requests.post("https://appleid.apple.com/auth/keys")
-    public_keys = response.json().get("Keys")
-    pass
-
-
 def authorize(authorization_code, client_secret=Depends(get_client_secret)):
     client_id = CLIENT_ID
 
@@ -65,10 +59,17 @@ def authorize(authorization_code, client_secret=Depends(get_client_secret)):
     return response
 
 
-def sign_in(payload: dict, db):
-    if 'sub' in payload:
-        user_id = "AP" + payload['sub']
+def verify_user(identity_code: str):
+    response = requests.post("https://appleid.apple.com/auth/keys")
 
+    # public_keys = response.json().get("Keys")
+    pass
+
+
+def sign_in(data: dict, db):
+    if 'user' in data:
+        user_id = "AP" + data['user']
+        name = data.get("name")
         try:
             user = crud.read_user(db=db, user_id=user_id)
             if user is not None:
@@ -80,9 +81,6 @@ def sign_in(payload: dict, db):
 
             user_data = {
                 "user_id": user_id,
-                "name": None,
-                "gender": None,
-                # "email": email,
                 "register_date": reg_date,
                 "acc_type": acc_type,
             }
@@ -95,21 +93,29 @@ def sign_in(payload: dict, db):
 
 
 @router.post("/create_user")
-async def register(codes: dict, db: Session = Depends(get_db)):
+async def register(res: dict, db: Session = Depends(get_db)):
     """
     Login with Appel Account.\n
-    :param codes: codes should be in dict form and include:\n
-        "authorizationCode": code
-        "identityToken": token
-    :param db: \n
+    :param res: Response you received from Apple server.\n
+    :param db: This field is not required.\n
     :return:  \n
     """
-    authorize_code = codes.get("authorizationCode")
-    identity_code = codes.get("identityToken")
+    sample = {"authorizationCode": "c097a6a3f38d943c2b94f64078ee4b7c1.0.rrrtw.wERkLAu8QqxEOcnRpdnitQ",
+              "authorizedScopes": [], "email": "sujinju0311@naver.com",
+              "fullName": {"familyName": "park", "givenName": "jinju", "middleName": None,
+                           "namePrefix": None, "nameSuffix": None, "nickname": None},
+              "identityToken": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIjoiUlMyNTYifQ.eyJpc3MiOiJodHRwczovL2FwcGxlaWQuYXBwbGUuY29tIiwiYXVkIjoib3JnLndyaWdodGJ1aWxkIiwiZXhwIjoxNjM4MDYxMzY1LCJpYXQiOjE2Mzc5NzQ5NjUsInN1YiI6IjAwMTEzNi4zZThhODc0YTYxMjI0NmY3YjMzOTY3ZjM2YWViYTFmMS4wNDM4Iiwibm9uY2UiOiJiZTk5NTE4YjNhYjdhM2E2Zjg4NjFmMzM4MDc3OWZlMzJmMDc3MWVkMTFhZTc4ZTY3YWU3YmY4MmRhNzJhN2YwIiwiY19oYXNoIjoidVBWem5JRW9NNThEZXc4M2g2eWY0dyIsImVtYWlsIjoic3VqaW5qdTAzMTFAbmF2ZXIuY29tIiwiZW1haWxfdmVyaWZpZWQiOiJ0cnVlIiwiYXV0aF90aW1lIjoxNjM3OTc0OTY1LCJub25jZV9zdXBwb3J0ZWQiOnRydWUsInJlYWxfdXNlcl9zdGF0dXMiOjF9.zWK6US-xq8CBye4k4Qs_FsaEO2qNyObezyuJlPNxqTGQ3JGUQqUyrsfY_VUHH0RfhfuT2abaY4G0kOz8oI3GsTV8fth9078dE7OOFocvyYrjM2G2hzZgLFvHnrfk-y2y8XVs6GD-Nxovnhfn1rGzk34D5hvih13bty4r7gAHi34LHy7yFWXM-6SOF24DLh13LJXXCsZ0aRK9YSksTet93PjttdrQf6YknkcCL9cd6AETPJIc-FFnk_WDpMVeGY6A2RLD8J0T31-mjiHVLqx0kZuisd9EQ_OqfdokteDEXPJbkv1BgIFFEqUBmJ1W14EGRoneu4LOUXe6AxRy6HDFOA",
+              "nonce": "8C.o3_.7QAyBd.kuBhNro.oFfdwO8MYH",
+              "realUserStatus": 1,
+              "state": None,
+              "user": "001136.3e8a874a612246f7b33967f36aeba1f1.0438"}
+
+    identity_code = res.get("identityToken")
 
     verify_user(identity_code)
+    user_id = sign_in(data=res, db=db)
 
-    response = authorize(authorization_code=authorize_code)
+    """response = authorize(authorization_code=authorize_code)
     if response.get("error", None):
         print("Apple login auth failed.")
         print(response.get("error"))
@@ -121,7 +127,9 @@ async def register(codes: dict, db: Session = Depends(get_db)):
         payload = jwt.decode(id_token, '')
         return sign_in(payload, db)
     else:
-        return {"Error": "Could not receive user information."}
+        return {"Error": "Could not receive user information."}"""
+
+    return user_id
 
 
 @router.get("/jwt_test/")
@@ -129,22 +137,3 @@ async def encoding_test():
     return get_client_secret()
 
 
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
-
-
-@router.get("/test")
-def create_api_token(user_id: str):
-    headers = {
-        'typ': "JWT",
-        'alg': "HS256"
-    }
-    payload = {
-        'iss': "Wright",
-        'iat': datetime.now(tz=timezone.utc).astimezone(),
-        'exp': datetime.now(tz=timezone.utc).astimezone() + timedelta(minutes=5),
-        'aud': user_id,
-        'sub': "API Token",
-    }
-    encoded_jwt = jwt.encode(payload, SECRET_KEY, headers=headers, algorithm=ALGORITHM)
-    return encoded_jwt
