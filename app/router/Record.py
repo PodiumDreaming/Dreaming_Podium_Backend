@@ -22,19 +22,19 @@ def initialize_t(user_id, wdate, db):
             for routine in obj.routines:
                 routines.update({routine: False})
         else:
-            routines = []
+            routines = None
     except SQLAlchemyError:
         return {"Error": "SQL operation failed."}
     tr = {
         "user_id": user_id,
         "written": wdate,
         "content": {
-            "train_detail": None,
+            "train_detail": {"content": None},
             "routines": routines,
             "success": {"content": None, "image": None},
             "failure": {"content": None, "image": None},
         },
-        "feedback": None,
+        "feedback": {"content": None},
     }
     crud.create_tr(tr=Models.Training(**tr), db=db)
 
@@ -190,6 +190,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 "routines": None,
                 "success": {"content": None, "image": None},
                 "failure": {"content": None, "image": None},
+                "training": {"content": None},
             }
             # set training return message if record doesn't exist.
             if len(tr) == 0 or tr is None:
@@ -197,15 +198,15 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 if obj:
                     routines = obj.routines
                     if routines:
-                        r = {}
+                        tr_routine  = {}
                         for routine in routines:
-                            r.update({routine: False})
+                            tr_routine.update({routine: False})
+                        training["routines"] = tr_routine
 
-                feedback = {"content": None}
             else:
                 training = tr[0].content
                 feedback = tr[0].feedback
-            training["feedback"] = feedback
+                training["feedback"] = feedback
 
             cr = crud.read_cr(user_id=user_id, wdate=d, db=db, number=1)
             # set training return message if record doesn't exist.
