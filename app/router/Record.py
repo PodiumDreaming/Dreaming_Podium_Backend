@@ -35,7 +35,7 @@ def initialize_t(user_id, wdate, db):
             "success": {"content": None, "image": None},
             "failure": {"content": None, "image": None},
         },
-        "feedback": {"content": None},
+        "feedback": None,
     }
     crud.create_tr(tr=Models.Training(**tr), db=db)
 
@@ -120,8 +120,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
             tr.content["failure"] = failure
 
         elif key_type == "feedback":
-            feedback = {"content": content}
-            tr.content["feedback"] = feedback
+            tr.feedback = content
 
         # conditioning data
         elif key_type == "mind":
@@ -136,8 +135,8 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
         crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)
 
-    except SQLAlchemyError:
-        return {"Error": "Error occurred while reading data."}
+    except SQLAlchemyError as sql:
+        return {"Error": sql}
     except KeyError:
         return {"KeyError": "key probably doesn't exist."}
     return {"status": "200OK"}
@@ -199,7 +198,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 if obj:
                     routines = obj.routines
                     if routines:
-                        tr_routine  = {}
+                        tr_routine = {}
                         for routine in routines:
                             tr_routine.update({routine: False})
                         training["routines"] = tr_routine
@@ -207,7 +206,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
             else:
                 training = tr[0].content
                 feedback = tr[0].feedback
-                training["feedback"] = feedback
+                training["feedback"].update({"content": feedback})
 
             cr = crud.read_cr(user_id=user_id, wdate=d, db=db, number=1)
             # set training return message if record doesn't exist.

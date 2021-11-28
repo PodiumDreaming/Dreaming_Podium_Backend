@@ -97,7 +97,7 @@ def read_cr(db: Session, user_id: str, wdate: date, number: int):
                                       Tables.CR.written == wdate).limit(number).all()
 
 
-def update_tr(db: Session, user_id: str, wdate: date, content, feedback: str):
+def update_tr(db: Session, user_id: str, wdate: date, content, feedback):
     record = db.query(Tables.TR).filter(Tables.TR.user_id == user_id,
                                         Tables.TR.written == wdate).first()
     if record is None:
