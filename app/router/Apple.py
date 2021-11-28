@@ -8,6 +8,8 @@ from .Account import get_password_hash
 from ..config.config import SOCIAL_AUTH_APPLE_KEY_ID, SOCIAL_AUTH_APPLE_TEAM_ID, CLIENT_ID
 from ..database import Models, crud
 from ..database.conn import get_db
+from ..util import create_api_token
+
 
 router = APIRouter(
     tags=["Apple"],
@@ -17,7 +19,7 @@ router = APIRouter(
 
 def get_client_secret():
     with open("./app/config/AuthKey_X2H4DX2778.p8", "rb") as fp:
-        SOCIAL_AUTH_APPLE_PRIVATE_KEY = fp.read()
+        SOCIAL_AUTH_APPLE_PRIVATE_KEY = fp.read().decode()
 
     headers = {
         'kid': SOCIAL_AUTH_APPLE_KEY_ID,
@@ -114,7 +116,7 @@ async def register(res: dict, db: Session = Depends(get_db)):
 
     verify_user(identity_code)
     user_id = sign_in(data=res, db=db)
-
+    token = create_api_token(user_id)
     """response = authorize(authorization_code=authorize_code)
     if response.get("error", None):
         print("Apple login auth failed.")
@@ -129,11 +131,6 @@ async def register(res: dict, db: Session = Depends(get_db)):
     else:
         return {"Error": "Could not receive user information."}"""
 
-    return user_id
-
-
-@router.get("/jwt_test/")
-async def encoding_test():
-    return get_client_secret()
+    return {"user_id": user_id, "API_Token": token}
 
 

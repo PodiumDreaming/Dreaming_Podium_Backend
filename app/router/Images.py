@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, File, UploadFile
 from typing import List
-from pydantic import BaseModel
 import os
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -75,12 +74,12 @@ async def upload_img(user_id: str, image_type: str, wdate,
                                               birthday=old_profile.birthday,
                                               team=old_profile.team,
                                               field=old_profile.field,
-                                              profile_image=image_urls)
+                                              profile_image=image_urls[0])
                         crud.update_profile(db=db, profile=new_profile)
                         log.update({f"file_{i}": "Success"})
                     else:
                         new_profile = Profile(user_id=user_id,
-                                              profile_image=image_urls)
+                                              profile_image=image_urls[0])
                         crud.create_profile(db=db, profile=new_profile)
                         log.update({f"file_{i}": "Success"})
                     break

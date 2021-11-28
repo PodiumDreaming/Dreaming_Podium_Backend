@@ -38,7 +38,7 @@ class Profile(BaseModel):
     birthday: Optional[date] = None
     team: Optional[str] = None
     field: Optional[str] = None
-    profile_image: Optional[list] = None
+    profile_image: Optional[str] = None
 
 
 class Record(BaseModel):

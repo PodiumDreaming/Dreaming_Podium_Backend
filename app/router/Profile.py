@@ -167,8 +167,8 @@ async def update_profile(user_id: str, keyword: str, content: str, db: Session =
         try:
             crud.update_profile(db=db, profile=new_profile)
         except SQLAlchemyError as sql:
-            return {"Status": "DB error.",
+            return {"Status": "500 DB error.",
                     "Detail": sql}
         else:
-            return {"Status": "200OK",
+            return {"Status": "200 OK",
                     "profile": new_profile}

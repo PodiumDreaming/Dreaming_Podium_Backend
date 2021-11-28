@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.router import KaKao, Account, Record, Images, Profile, Objective, Apple
+from app.router import KaKao, Record, Images, Profile, Objective, Apple
 from app.database import Tables
 from app.database.conn import engine
+import time
+import logging
 
 
 def init_app():
@@ -39,14 +41,47 @@ def init_app():
     return app
 
 
+def init_logger():
+    logger = logging.getLogger("FastAPI")
+    logger.setLevel(logging.INFO)
+
+    file_handler = logging.FileHandler(filename="log/system.log")
+    formatter = logging.Formatter(fmt="[%(asctime)s] %(name)s:%(levelname)s - %(message)s")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    return logger
+
+
 app = init_app()
+log = init_logger()
+
+
+@app.middleware("http")
+async def log_req(request: Request, call_next):
+    start_time = time.time()
+    method = request.method
+    user = request.client.host
+    port = request.client.port
+    path = request.url.path
+    scheme = request.url.scheme
+    response = await call_next(request)
+
+    process_time = start_time - time.time()
+    process_time_f = f"{process_time:.3f}"
+    status_code = response.status_code
+    msg = f"{user}:{port} - [{method} {path} {scheme}] [{status_code}]: {process_time_f}"
+
+    if status_code == 200:
+        log.info(msg)
+    elif status_code == 422 or status_code == 500:
+        log.error(msg)
+    else:
+        log.info(msg)
+    return response
 
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
-
-
-
-
-
+    return {"hello": "world"}

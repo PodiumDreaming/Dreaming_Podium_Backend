@@ -8,6 +8,8 @@ from ..config.config import kakao_client, callback_url
 from ..database import Models, crud
 from ..database.conn import get_db
 from .Account import get_password_hash
+from ..util import create_api_token
+
 
 router = APIRouter(
     tags=["KaKao"],
@@ -48,6 +50,7 @@ def kakao_signin(info, db):
     return user_id
 
 
+"""
 @router.get("/kakao/me", response_model=Models.User)
 async def get_user(user_id: str, db: Session = Depends(get_db)):
     current_user = crud.read_user(db, user_id)
@@ -62,6 +65,7 @@ async def deleter_user(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Could not find user")
     else:
         return {"status": "200"}
+"""
 
 """
 @router.get("/kakao/login")
@@ -103,7 +107,9 @@ async def get_info(tokens: dict, db: Session = Depends(get_db)):
         info_rq = requests.get("https://kapi.kakao.com/v2/user/me",
                                headers={"Authorization": f"Bearer {access_token}"})
         info = info_rq.json()
-        return kakao_signin(info, db)
+        user_id = kakao_signin(info, db)
+        token = create_api_token(user_id)
+        return {"user_id": user_id, "API_Token": token}
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

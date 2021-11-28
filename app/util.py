@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from .config.config import SECRET_KEY, ALGORITHM
 
 
-# Parse string data and convert into list.
+"""# Parse string data and convert into list.
 def simple_parser(target: str):
     if target == "[]":
         return []
@@ -78,7 +78,7 @@ def complex_parser(target: str):
                 injury[k] = None
         res.append(injury)
 
-    return res
+    return res"""
 
 
 # Convert input data into datetime.date form.
@@ -109,7 +109,7 @@ def create_api_token(user_id: str):
     payload = {
         'iss': "Wright",
         'iat': datetime.now(tz=timezone.utc).astimezone(),
-        'exp': datetime.now(tz=timezone.utc).astimezone() + timedelta(days=15),
+        'exp': datetime.now(tz=timezone.utc).astimezone() + timedelta(days=30),
         'sub': "API Token",
         "User": user_id
     }

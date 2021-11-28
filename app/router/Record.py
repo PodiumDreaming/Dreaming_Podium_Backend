@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Request, HTTPException, status
 from ..database import Models, crud
 from app.database.conn import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Union
-from ..util import convert_date, token_verification
+from ..util import convert_date, token_verification, create_api_token
 
 
 router = APIRouter(
@@ -57,7 +57,8 @@ def initialize_c(user_id, wdate, db):
 # Create/overwrites tr/cr record of given date.
 @router.post("/write/{user_id}")
 async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dict, List[str], List[dict]],
-                db: Session = Depends(get_db)):
+                db: Session = Depends(get_db),
+                token=Header(None, title="API_Token")):
     """
     :param db: Connection to database. This field is not needed.\n
     :param user_id: str\n
@@ -76,9 +77,15 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         "injury"\n
     :param content: Writing content\n
     content: Updating value.\n
-    Type of content should be one of [str, dict, list[str], list[dict]]
-    :return: 200Ok on Success.\n
+    Type of content should be one of [str, dict, list[str], list[dict]]\n
+    :param token: API_Token you received when you registered in.\n
+    :return: 200 Ok on Success.\n
     """
+    if not token_verification(token=token, user_id=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Token",
+        )
     try:
         d = convert_date(wdate).get("date")
         if d is None:
@@ -144,12 +151,13 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
 
 # Read tr/cr record of given user_id and given date.
 @router.get("/read/{user_id}")
-async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
+async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=Header(None, title="API_Token")):
     """
 
     :param user_id: User_id of the owner of the record.\n
     :param wdate: Date of the record. Must be something like 'Fri Nov 05 2021'\n
     :param db: This field is not required.\n
+    :param token: API_Token you received when you registered in.\n
     :return: User record of given date.
     """
     """
@@ -172,6 +180,11 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
         }\n
     }\n
     """
+    if not token_verification(token=token, user_id=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Token",
+        )
     try:
         user = crud.read_user(db=db, user_id=user_id)
         if user is None:
@@ -212,16 +225,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 conditioning = {
                     "mind": [],
                     "physical": [],
-                    "injury": [
-                        {
-                            "injuryDirection": None,
-                            "injurySection": None,
-                            "InjuryForm": None,
-                            "painData": None,
-                            "interruptData": None,
-                            "injuryMemo": None,
-                         }
-                    ],
+                    "injury": [],
                 }
             else:
                 conditioning = cr[0].content
@@ -239,10 +243,15 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
             return {"Check if user_id has valid value or date is in right format. Example: 'Fri Nov 05 2021'"}
 
 
-@router.get("token_test")
-async def test(user_id: str, token=Header(None)):
+@router.get("/token_test")
+async def test(user_id: str, request: Request, token=Header(None, title="API_Token")):
     if not token_verification(token, user_id):
         return {"Verification": "Failure"}
     else:
         return {"Verification": "Success"}
 
+
+@router.get("/my_token")
+async def get_token(user_id: str):
+    token = create_api_token(user_id)
+    return token
