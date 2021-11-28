@@ -190,7 +190,6 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 "routines": None,
                 "success": {"content": None, "image": None},
                 "failure": {"content": None, "image": None},
-                "feedback": {"content": None},
             }
             # set training return message if record doesn't exist.
             if len(tr) == 0 or tr is None:
@@ -202,11 +201,10 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                         for routine in routines:
                             tr_routine.update({routine: False})
                         training["routines"] = tr_routine
-
+                feedback = None
             else:
                 training = tr[0].content
                 feedback = tr[0].feedback
-                training["feedback"].update({"content": feedback})
 
             cr = crud.read_cr(user_id=user_id, wdate=d, db=db, number=1)
             # set training return message if record doesn't exist.
@@ -232,6 +230,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 "date": wdate,
                 "noteContentGroup": {
                     "training": training,
+                    "feedback": feedback,
                     "conditioning": conditioning,
                 }
             }
