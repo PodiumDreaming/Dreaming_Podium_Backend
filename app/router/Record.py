@@ -191,7 +191,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db)):
                 "routines": None,
                 "success": {"content": None, "image": None},
                 "failure": {"content": None, "image": None},
-                "training": {"content": None},
+                "feedback": {"content": None},
             }
             # set training return message if record doesn't exist.
             if len(tr) == 0 or tr is None:
