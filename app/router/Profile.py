@@ -123,9 +123,10 @@ async def update_profile(user_id: str, keyword: str, content: str, db: Session =
     if keyword not in ["name", "gender", "birthday", "team", "field"]:
         return {"Keyword Error": "Check keyword."}
     else:
+        # check if profile exist
         profile = crud.read_profile(db=db, user_id=user_id)
         if profile is None:
-            return {"Error": "Couldn't find requested user."}
+            return {"Error": "Couldn't find profile of requested user."}
         if keyword == "name":
             new_profile = Profile(user_id=user_id,
                                   name=content,

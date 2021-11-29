@@ -108,7 +108,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         tr = tr_record[0]
         cr = cr_record[0]
 
-        # training data
+        # training data update
         if key_type == "train_detail":
             detail = {"content": content}
             tr.content["train_detail"] = detail
@@ -129,26 +129,32 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         elif key_type == "feedback":
             tr.feedback = content
 
-        # conditioning data
+        # conditioning data update
         elif key_type == "mind":
             print(content)
-            cr.content["mind"] = content
+            cr.content["mind"] = content.get("content")
 
         elif key_type == "physical":
             print(content)
-            cr.content["physical"] = content
+            cr.content["physical"] = content.get("content")
 
         elif key_type == "injury":
             print(content)
-            cr.content["injury"] = content
+            cr.content["injury"] = content.get("content")
 
         crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
         crud.update_cr(db=db, user_id=user_id, content=cr.content, wdate=d)
 
     except SQLAlchemyError as sql:
-        return {"Error": sql}
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQL operation failed.": sql},
+        )
     except KeyError:
-        return {"KeyError": "key probably doesn't exist."}
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"KeyError": "key probably doesn't exist."}
+        )
     return {"status": "200OK"}
 
 
@@ -183,19 +189,30 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=He
         }\n
     }\n
     """
+    # verify API_Token
     if not token_verification(token=token, user_id=user_id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Token",
         )
     try:
+        # check if user exists
         user = crud.read_user(db=db, user_id=user_id)
         if user is None:
-            return {"user not found"}
-    except SQLAlchemyError:
-        return {"Error": "Operation Failed."}
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="user not found",
+            )
+    except SQLAlchemyError as sql:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQL operation failed.": sql},
+        )
     except Exception as e:
-        return {"Error:": e}
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"Unexpected Error": e}
+        )
     else:
         try:
             d = convert_date(wdate).get("date")
@@ -232,7 +249,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=He
                 }
             else:
                 conditioning = cr[0].content
-
+            # put together into one response object
             res = {
                 "date": wdate,
                 "noteContentGroup": {
@@ -243,11 +260,14 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=He
             }
             return res
         except (TypeError, ValueError):
-            return {"Check if user_id has valid value or date is in right format. Example: 'Fri Nov 05 2021'"}
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Check if user_id has valid value or date is in right format. Example: 'Fri Nov 05 2021'",
+            )
 
 
 @router.get("/token_test")
-async def test(user_id: str, request: Request, token=Header(..., title="API_Token")):
+async def test(user_id: str, token=Header(..., title="API_Token")):
     if not token_verification(token, user_id):
         return {"Verification": "Failure"}
     else:
