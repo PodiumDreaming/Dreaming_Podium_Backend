@@ -42,7 +42,7 @@ def kakao_signin(info, db):
     user_db = Models.UserFull(**user_data, password=token)
     crud.create_user(db=db, user=user_db)
 
-    return user_id
+    return user_id, token
 
 
 """
