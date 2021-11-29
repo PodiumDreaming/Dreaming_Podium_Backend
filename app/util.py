@@ -124,7 +124,6 @@ def token_verification(token, user_id: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if user_id != payload.get("User", None):
-            print(user_id, payload.get("User"))
             raise JWTError
     except jwt.ExpiredSignatureError:
         return False

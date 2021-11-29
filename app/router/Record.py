@@ -131,12 +131,15 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
 
         # conditioning data
         elif key_type == "mind":
+            print(content)
             cr.content["mind"] = content
 
         elif key_type == "physical":
+            print(content)
             cr.content["physical"] = content
 
         elif key_type == "injury":
+            print(content)
             cr.content["injury"] = content
 
         crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
