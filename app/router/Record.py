@@ -32,8 +32,8 @@ def initialize_t(user_id, wdate, db):
         "content": {
             "train_detail": {"content": None},
             "routines": routines,
-            "success": {"content": None, "image": None},
-            "failure": {"content": None, "image": None},
+            "success": {"content": None, "image": []},
+            "failure": {"content": None, "image": []},
         },
         "feedback": None,
     }
@@ -221,8 +221,8 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=He
             training = {
                 "train_detail": {"content": None},
                 "routines": None,
-                "success": {"content": None, "image": None},
-                "failure": {"content": None, "image": None},
+                "success": {"content": None, "image": []},
+                "failure": {"content": None, "image": []},
             }
             # set training return message if record doesn't exist.
             if len(tr) == 0 or tr is None:

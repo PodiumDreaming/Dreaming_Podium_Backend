@@ -99,10 +99,16 @@ async def upload_img(user_id: str, image_type: str, wdate,
                     tr_content = old_tr.content
                     if image_type == "success":
                         success = tr_content.get("success").get("content")
-                        tr_content["success"] = {"content": success, "image": image_urls}
+                        urls = tr_content.get("success").get("image")
+                        for url in image_urls:
+                            urls.append(url)
+                        tr_content["success"] = {"content": success, "image": urls}
                     else:
                         failure = tr_content.get("failure").get("content")
-                        tr_content["failure"] = {"content": failure, "image": image_urls}
+                        urls = tr_content.get("success").get("image")
+                        for url in image_urls:
+                            urls.append(url)
+                        tr_content["failure"] = {"content": failure, "image": urls}
                     crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=old_tr.feedback)
                     log.update({f"file_{i}": "Success"})
 
@@ -168,10 +174,10 @@ async def delete_image(user_id: str, image_type: str, content: Union[str, dict, 
             tr_content = old_tr.content
             if image_type == "success":
                 success = tr_content.get("success").get("content")
-                tr_content["success"] = {"content": success, "image": content}
+                tr_content["success"] = {"content": success, "image": content.get("content")}
             else:
                 failure = tr_content.get("failure").get("content")
-                tr_content["failure"] = {"content": failure, "image": content}
+                tr_content["failure"] = {"content": failure, "image": content.get("content")}
             crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=old_tr.feedback)
 
     except SQLAlchemyError as sql:
