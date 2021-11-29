@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Header, status
 from typing import List
 import os
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,7 +8,7 @@ from app.database.conn import get_db, get_s3
 from app.config.config import BUCKET_NAME
 from app.database.Models import Profile
 from datetime import datetime
-from ..util import convert_date
+from ..util import convert_date, token_verification
 
 
 router = APIRouter(
@@ -20,7 +20,8 @@ router = APIRouter(
 
 @router.post("/uploadfile")
 async def upload_img(user_id: str, image_type: str, wdate,
-                     files: List[UploadFile] = File(...), db: Session = Depends(get_db), s3=Depends(get_s3)):
+                     files: List[UploadFile] = File(...), db: Session = Depends(get_db), s3=Depends(get_s3),
+                     token=Header(None, title="API_Token")):
     """
     API to upload image files for profile or record.\n
     :param user_id: user_id of image owner.\n
@@ -32,10 +33,19 @@ async def upload_img(user_id: str, image_type: str, wdate,
     :param files: Uploading image files.\n
     :param db: db connection. This field is not required.\n
     :param s3: s3 connection. This field is not required.\n
+    :param token: API_Token you received when you registered in.\n
     :return: 200ok on success.\n
     """
+    if not token_verification(token=token, user_id=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Token",
+        )
     if image_type not in ["profile", "success", "failure"]:
-        return
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid image_type",
+        )
     else:
         image_urls = []
         log = {}
@@ -108,3 +118,19 @@ async def upload_img(user_id: str, image_type: str, wdate,
 
     return {"Status": "200 OK",
             "Detail": log}
+
+
+@router.post("/delete-record-image")
+async def delete_image(user_id: str, db=Depends(get_db), token=Header(None, title="API_Token")):
+    """
+    API to remove image-url of success/failure images of training record.
+    :param user_id:
+    :param db:
+    :param token: API_Token you received when you registered in.\n
+    :return:
+    """
+    if not token_verification(token=token, user_id=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Token",
+        )

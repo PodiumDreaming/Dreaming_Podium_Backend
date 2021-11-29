@@ -101,6 +101,7 @@ def convert_date(date):
     return result
 
 
+# create JWT for a user.
 def create_api_token(user_id: str):
     headers = {
         'typ': "JWT",
@@ -115,11 +116,10 @@ def create_api_token(user_id: str):
     }
     encoded_jwt = jwt.encode(payload, SECRET_KEY, headers=headers, algorithm=ALGORITHM)
 
-    # payload = jwt.decode(encoded_jwt, SECRET_KEY, algorithms=[ALGORITHM], audience=user_id)
-    # print(payload)
     return encoded_jwt
 
 
+# verify token
 def token_verification(token, user_id: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

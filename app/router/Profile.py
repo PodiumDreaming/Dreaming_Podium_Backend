@@ -33,6 +33,7 @@ async def make_profile(user_id: str,
         :param field: "종목",\n
         :param db: This field is not required.
         """
+    # Check if there is an existing profile.
     old = crud.read_profile(db=db, user_id=user_id)
     try:
         if old is None:
@@ -46,6 +47,7 @@ async def make_profile(user_id: str,
                 "field": field,
                 "profile_image": None,
             }
+            # Make a new profile if there isn't one.
             record = crud.create_profile(db=db, profile=Models.Profile(**default))
         else:
             d = convert_date(birthday).get("date")
@@ -58,6 +60,7 @@ async def make_profile(user_id: str,
                 "field": field,
                 "profile_image": old.profile_image,
             }
+            # Update profile with given parameters if there is one already existing.
             crud.update_profile(db=db, profile=Models.Profile(**default))
             return {"Status": "200OK",
                     "profile": default}
@@ -172,3 +175,25 @@ async def update_profile(user_id: str, keyword: str, content: str, db: Session =
         else:
             return {"Status": "200 OK",
                     "profile": new_profile}
+
+
+@router.post("/delete_image")
+async def remove_profile_image(user_id: str, db: Session = Depends(get_db)):
+    profile = crud.read_profile(db=db, user_id=user_id)
+    if profile is None:
+        return {"Error": "Couldn't find requested user."}
+    new_profile = Profile(user_id=user_id,
+                          name=profile.name,
+                          gender=profile.gender,
+                          birthday=profile.birthday,
+                          team=profile.team,
+                          field=profile.field,
+                          profile_image=None)
+    try:
+        crud.update_profile(db=db, profile=new_profile)
+    except SQLAlchemyError as sql:
+        return {"Status": "500 DB error.",
+                "Detail": sql}
+    else:
+        return {"Status": "200 OK",
+                "profile": new_profile}

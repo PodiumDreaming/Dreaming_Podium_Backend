@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 from ..config.config import kakao_client, callback_url
 from ..database import Models, crud
 from ..database.conn import get_db
-from .Account import get_password_hash
 from ..util import create_api_token
 
 
@@ -24,27 +23,23 @@ def kakao_signin(info, db):
     user_id = "KA" + str(info.get("id", None))
     user = crud.read_user(db=db, user_id=user_id)
     if user is not None:
-        return user.user_id
+        return user.user_id, user.password
 
-    name = profile.get("nickname", None)
+    """name = profile.get("nickname", None)
     gender = kakao_account.get("gender", None)
-    # email = kakao_account.get("email", None)
+    # email = kakao_account.get("email", None)"""
     reg_date = datetime.now(tz=timezone.utc).astimezone()
     acc_type = "KAKAO"
-
-    password = get_password_hash(user_id)
+    token = create_api_token(user_id)
 
     user_data = {
         "user_id": user_id,
-        "name": name,
-        "gender": gender,
-        # "email": email,
         "register_date": reg_date,
         "acc_type": acc_type,
     }
 
     # user = Models.User(**user_data)
-    user_db = Models.UserFull(**user_data, password=password)
+    user_db = Models.UserFull(**user_data, password=token)
     crud.create_user(db=db, user=user_db)
 
     return user_id
@@ -104,11 +99,12 @@ async def get_info(tokens: dict, db: Session = Depends(get_db)):
     access_token = tokens.get("access_token")
 
     if access_token is not None:
+        # request user information to KaKao server.
         info_rq = requests.get("https://kapi.kakao.com/v2/user/me",
                                headers={"Authorization": f"Bearer {access_token}"})
         info = info_rq.json()
-        user_id = kakao_signin(info, db)
-        token = create_api_token(user_id)
+        user_id, token = kakao_signin(info, db)
+
         return {"user_id": user_id, "API_Token": token}
     else:
         raise HTTPException(

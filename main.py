@@ -17,9 +17,6 @@ def init_app():
     app = FastAPI()
     app.include_router(KaKao.router)
     app.include_router(Apple.router)
-    # app.include_router(Training.router)
-    # app.include_router(Conditioning.router)
-    # app.include_router(Account.router)
     app.include_router(Profile.router)
     app.include_router(Objective.router)
     app.include_router(Record.router)
@@ -27,7 +24,10 @@ def init_app():
 
     origins = [
         "http://localhost:3000",
-        "localhost:3000"
+        "localhost:3000",
+        "http://localhost:3000"
+        "localhost:8080",
+        "http://localhost",
     ]
 
     app.add_middleware(
