@@ -21,7 +21,7 @@ router = APIRouter(
 @router.post("/uploadfile")
 async def upload_img(user_id: str, image_type: str, wdate,
                      files: List[UploadFile] = File(...), db: Session = Depends(get_db), s3=Depends(get_s3),
-                     token=Header(None, title="API_Token")):
+                     token=Header(..., title="API_Token")):
     """
     API to upload image files for profile or record.\n
     :param user_id: user_id of image owner.\n
@@ -122,7 +122,7 @@ async def upload_img(user_id: str, image_type: str, wdate,
 
 @router.post("/delete_image/{user_id}")
 async def delete_image(user_id: str, image_type: str, content: Union[str, dict, List[str], List[dict]],
-                       wdate: str, db=Depends(get_db), token=Header(None, title="API_Token")):
+                       wdate: str, db=Depends(get_db), token=Header(..., title="API_Token")):
     """
     API to remove image-url of success/failure images of training record.\n
     :param user_id: user_id of image owner.\n

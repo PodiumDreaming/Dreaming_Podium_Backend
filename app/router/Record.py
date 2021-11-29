@@ -58,7 +58,7 @@ def initialize_c(user_id, wdate, db):
 @router.post("/write/{user_id}")
 async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dict, List[str], List[dict]],
                 db: Session = Depends(get_db),
-                token=Header(None, title="API_Token")):
+                token=Header(..., title="API_Token")):
     """
     :param db: Connection to database. This field is not needed.\n
     :param user_id: str\n
@@ -151,7 +151,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
 
 # Read tr/cr record of given user_id and given date.
 @router.get("/read/{user_id}")
-async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=Header(None, title="API_Token")):
+async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=Header(..., title="API_Token")):
     """
 
     :param user_id: User_id of the owner of the record.\n
@@ -244,7 +244,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=He
 
 
 @router.get("/token_test")
-async def test(user_id: str, request: Request, token=Header(None, title="API_Token")):
+async def test(user_id: str, request: Request, token=Header(..., title="API_Token")):
     if not token_verification(token, user_id):
         return {"Verification": "Failure"}
     else:
