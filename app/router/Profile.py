@@ -175,25 +175,3 @@ async def update_profile(user_id: str, keyword: str, content: str, db: Session =
         else:
             return {"Status": "200 OK",
                     "profile": new_profile}
-
-
-@router.post("/delete_image")
-async def remove_profile_image(user_id: str, db: Session = Depends(get_db)):
-    profile = crud.read_profile(db=db, user_id=user_id)
-    if profile is None:
-        return {"Error": "Couldn't find requested user."}
-    new_profile = Profile(user_id=user_id,
-                          name=profile.name,
-                          gender=profile.gender,
-                          birthday=profile.birthday,
-                          team=profile.team,
-                          field=profile.field,
-                          profile_image=None)
-    try:
-        crud.update_profile(db=db, profile=new_profile)
-    except SQLAlchemyError as sql:
-        return {"Status": "500 DB error.",
-                "Detail": sql}
-    else:
-        return {"Status": "200 OK",
-                "profile": new_profile}

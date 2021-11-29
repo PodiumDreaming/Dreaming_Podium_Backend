@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Header, status
-from typing import List
+from typing import List, Union
 import os
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -120,17 +120,68 @@ async def upload_img(user_id: str, image_type: str, wdate,
             "Detail": log}
 
 
-@router.post("/delete-record-image")
-async def delete_image(user_id: str, db=Depends(get_db), token=Header(None, title="API_Token")):
+@router.post("/delete_image/{user_id}")
+async def delete_image(user_id: str, image_type: str, content: Union[str, dict, List[str], List[dict]],
+                       wdate: str, db=Depends(get_db), token=Header(None, title="API_Token")):
     """
-    API to remove image-url of success/failure images of training record.
-    :param user_id:
-    :param db:
+    API to remove image-url of success/failure images of training record.\n
+    :param user_id: user_id of image owner.\n
+    :param image_type:\n
+        "profile" for profile image\n
+        "success" or "failure" for training record image.\n
+    :param content: Remaining images.
+    :param wdate: written date of record. If uploading profile image, enter today's date.\n
+    e.g) Fri Nov 19 2021\n
+    :param db: this field is not required.\n
     :param token: API_Token you received when you registered in.\n
-    :return:
+    :return: 200 OK on success.
     """
     if not token_verification(token=token, user_id=user_id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Token",
+        )
+    if image_type not in ["profile", "success", "failure"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid image_type",
+        )
+    try:
+        if image_type == "profile":
+            old_profile = crud.read_profile(db=db, user_id=user_id)
+            if old_profile:
+                new_profile = Profile(user_id=user_id,
+                                      name=old_profile.name,
+                                      gender=old_profile.gender,
+                                      birthday=old_profile.birthday,
+                                      team=old_profile.team,
+                                      field=old_profile.field,
+                                      profile_image=None)
+                crud.update_profile(db=db, profile=new_profile)
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Profile not found.")
+        else:
+            d = convert_date(wdate).get("date")
+            old_tr = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)[0]
+            tr_content = old_tr.content
+            if image_type == "success":
+                success = tr_content.get("success").get("content")
+                tr_content["success"] = {"content": success, "image": content}
+            else:
+                failure = tr_content.get("failure").get("content")
+                tr_content["failure"] = {"content": failure, "image": content}
+            crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=old_tr.feedback)
+
+    except SQLAlchemyError as sql:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQl operation failed.": sql}
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"Unexpected Error": e}
         )
