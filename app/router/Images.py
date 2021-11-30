@@ -101,13 +101,15 @@ async def upload_img(user_id: str, image_type: str, wdate,
                         success = tr_content.get("success").get("content")
                         urls = tr_content.get("success").get("image")
                         for url in image_urls:
-                            urls.append(url)
+                            if url not in urls:
+                                urls.append(url)
                         tr_content["success"] = {"content": success, "image": urls}
                     else:
                         failure = tr_content.get("failure").get("content")
                         urls = tr_content.get("success").get("image")
                         for url in image_urls:
-                            urls.append(url)
+                            if url not in urls:
+                                urls.append(url)
                         tr_content["failure"] = {"content": failure, "image": urls}
                     crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=old_tr.feedback)
                     log.update({f"file_{i}": "Success"})
