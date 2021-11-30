@@ -114,7 +114,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
             tr.content["train_detail"] = detail
 
         elif key_type == "routines":
-            tr.content["routines"] = content
+            tr.content["routines"] = content.get("content")
 
         elif key_type == "success":
             url = tr.content.get("success").get("image")
