@@ -9,6 +9,7 @@ from app.config.config import BUCKET_NAME
 from app.database.Models import Profile
 from datetime import datetime
 from ..util import convert_date, token_verification
+from .Record import initialize_t, initialize_c
 
 
 router = APIRouter(
@@ -49,18 +50,20 @@ async def upload_img(user_id: str, image_type: str, wdate,
     else:
         image_urls = []
         log = {}
+        partial_clear = False
+        all_fail = len(files)
         for i in range(len(files)):
             # meta data of file
-            content = await files[i].read()
-            name = files[i].filename
-            path = os.path.join("./temp/", name)
-            content_type = files[i].content_type
-
-            # temporary save
-            with open(path, "wb") as fp:
-                fp.write(content)
-
             try:
+                content = await files[i].read()
+                name = files[i].filename
+                path = os.path.join("./temp/", name)
+                content_type = files[i].content_type
+
+                # temporary save
+                with open(path, "wb") as fp:
+                    fp.write(content)
+
                 # upload file to s3 bucket
                 now = datetime.now().strftime("%Y%m%d%H%M%S")
                 key = f"{image_type}_image/{user_id}_{now}{i}_{name}"
@@ -69,12 +72,10 @@ async def upload_img(user_id: str, image_type: str, wdate,
 
                 # add url to list
                 image_urls.append(url)
-
                 # delete file in temporary directory.
                 os.remove(path)
 
                 # DB update operation
-
                 if image_type == "profile":
                     old_profile = crud.read_profile(db=db, user_id=user_id)
                     if old_profile:
@@ -95,8 +96,16 @@ async def upload_img(user_id: str, image_type: str, wdate,
                     break
                 else:
                     d = convert_date(wdate).get("date")
-                    old_tr = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)[0]
-                    tr_content = old_tr.content
+                    records = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
+                    if len(records) > 0:
+                        tr = records[0]
+                        tr_content = tr.content
+                    else:
+                        initialize_t(user_id=user_id, wdate=d, db=db)
+                        initialize_c(user_id=user_id, wdate=d, db=db)
+                        tr = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)[0]
+                        tr_content = tr.content
+
                     if image_type == "success":
                         success = tr_content.get("success").get("content")
                         urls = tr_content.get("success").get("image")
@@ -106,26 +115,39 @@ async def upload_img(user_id: str, image_type: str, wdate,
                         tr_content["success"] = {"content": success, "image": urls}
                     else:
                         failure = tr_content.get("failure").get("content")
-                        urls = tr_content.get("success").get("image")
+                        urls = tr_content.get("failure").get("image")
                         for url in image_urls:
                             if url not in urls:
                                 urls.append(url)
                         tr_content["failure"] = {"content": failure, "image": urls}
-                    crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=old_tr.feedback)
+
+                    crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=tr.feedback)
                     log.update({f"file_{i}": "Success"})
 
             except SQLAlchemyError as sql:
                 print(sql)
                 log.update({f"file_{i}": "Failed"})
+                partial_clear = True
+                all_fail -= 1
                 continue
-
+            except IndexError as index:
+                print(index)
+                log.update({f"file_{i}": "Failed"})
+                partial_clear = True
+                all_fail -= 1
+                continue
             except Exception as e:
                 print(e)
                 log.update({f"file_{i}": "Failed"})
+                partial_clear = True
+                all_fail -= 1
                 continue
-
-    return {"Status": "200 OK",
-            "Detail": log}
+    if all_fail == 0:
+        return {"Status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Detail": log}
+    else:
+        return {"Status": status.HTTP_201_CREATED,
+                "Detail": log}
 
 
 @router.post("/delete_image/{user_id}")
