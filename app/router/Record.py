@@ -24,20 +24,22 @@ def initialize_t(user_id, wdate, db):
                 routines.update({routine: False})
         else:
             routines = None
-    except SQLAlchemyError:
-        return {"Error": "SQL operation failed."}
-    tr = {
-        "user_id": user_id,
-        "written": wdate,
-        "content": {
-            "train_detail": {"content": None},
-            "routines": routines,
-            "success": {"content": None, "image": []},
-            "failure": {"content": None, "image": []},
-        },
-        "feedback": None,
-    }
-    crud.create_tr(tr=Models.Training(**tr), db=db)
+        tr = {
+            "user_id": user_id,
+            "written": wdate,
+            "content": {
+                "train_detail": {"content": None},
+                "routines": routines,
+                "success": {"content": None, "image": []},
+                "failure": {"content": None, "image": []},
+            },
+            "feedback": None,
+        }
+        crud.create_tr(tr=Models.Training(**tr), db=db)
+    except SQLAlchemyError as sql:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQL operation failed.": sql},)
 
 
 # Create default conditioning record.
@@ -51,7 +53,13 @@ def initialize_c(user_id, wdate, db):
             "injury": [],
         }
     }
-    crud.create_cr(cr=Models.Condition(**cr), db=db)
+    try:
+        crud.create_cr(cr=Models.Condition(**cr), db=db)
+    except SQLAlchemyError as sql:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQL operation failed.": sql},
+        )
 
 
 # Create/overwrites tr/cr record of given date.

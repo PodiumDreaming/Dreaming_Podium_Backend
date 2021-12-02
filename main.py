@@ -1,5 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.router import KaKao, Record, Images, Profile, Objective, Apple
 from app.database import Tables
@@ -42,20 +45,27 @@ def init_app():
 
 
 def init_logger():
-    logger = logging.getLogger("FastAPI")
-    logger.setLevel(logging.INFO)
+    req_logger = logging.getLogger("Request")
+    req_logger.setLevel(logging.INFO)
+    err_logger = logging.getLogger("Error")
+    err_logger.setLevel(logging.WARNING)
 
-    file_handler = logging.FileHandler(filename="log/system.log")
+    req_handler = logging.FileHandler(filename="log/request.log")
+    err_handler = logging.FileHandler(filename="log/error.log")
+
     formatter = logging.Formatter(fmt="[%(asctime)s] %(name)s:%(levelname)s - %(message)s")
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(formatter)
+    req_handler.setLevel(logging.INFO)
+    req_handler.setFormatter(formatter)
+    err_handler.setLevel(logging.ERROR)
+    err_handler.setFormatter(formatter)
 
-    logger.addHandler(file_handler)
-    return logger
+    req_logger.addHandler(req_handler)
+    err_logger.addHandler(err_handler)
+    return req_logger, err_logger
 
 
 app = init_app()
-log = init_logger()
+req_log, err_log = init_logger()
 
 
 @app.middleware("http")
@@ -66,6 +76,7 @@ async def log_req(request: Request, call_next):
     port = request.client.port
     path = request.url.path
     scheme = request.url.scheme
+
     response = await call_next(request)
 
     process_time = start_time - time.time()
@@ -73,13 +84,26 @@ async def log_req(request: Request, call_next):
     status_code = response.status_code
     msg = f"{user}:{port} - [{method} {path} {scheme}] [{status_code}]: {process_time_f}"
 
-    if status_code == 200:
-        log.info(msg)
-    elif status_code == 422 or status_code == 500:
-        log.error(msg)
+    if 200 <= status_code <= 300:
+        req_log.info(msg)
+    elif status_code >= 400:
+        err_log.error(msg)
     else:
-        log.info(msg)
+        req_log.info(msg)
     return response
+
+
+"""@app.exception_handler(StarletteHTTPException)
+async def leave_log(request: Request, exception):
+    method = request.method
+    user = request.client.host
+    port = request.client.port
+    path = request.url.path
+    scheme = request.url.scheme
+    msg = f"{user}:{port} - [{method} {path} {scheme}] [{exception.status_code}]"
+    err_log.error(msg)
+    return JSONResponse(status_code=exception.status_code,
+                        content=exception.detail)"""
 
 
 @app.get("/")

@@ -1,0 +1,4 @@
+log/*.log
+app/router/Account.py
+app/router/Conditioning.py
+app/router/Training.py

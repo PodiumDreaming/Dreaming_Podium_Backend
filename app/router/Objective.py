@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.database import crud
@@ -17,16 +17,27 @@ router = APIRouter(
 
 def sync_obj(user_id: str, routines, db: Session):
     # check if there is today's record.
-    today = date.today()
-    today_record = crud.read_tr(db=db, user_id=user_id, wdate=today, number=1)
-    # if so, synchronize updated routine data.
-    if len(today_record) > 0:
-        tr = today_record[0]
-        new_r = {}
-        for routine in routines:
-            new_r.update({routine: False})
-        tr.content["routines"] = new_r
-        crud.update_tr(db=db, user_id=user_id, wdate=today, content=tr.content, feedback=tr.feedback)
+    try:
+        today = date.today()
+        today_record = crud.read_tr(db=db, user_id=user_id, wdate=today, number=1)
+        # if so, synchronize updated routine data.
+        if len(today_record) > 0:
+            tr = today_record[0]
+            new_r = {}
+            for routine in routines:
+                new_r.update({routine: False})
+            tr.content["routines"] = new_r
+            crud.update_tr(db=db, user_id=user_id, wdate=today, content=tr.content, feedback=tr.feedback)
+    except SQLAlchemyError as sql:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQL operation failed.": sql},
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"Server Error.": e}
+        )
 
 
 @router.post("/create_objectives")
@@ -144,21 +155,27 @@ async def get_objective(user_id: str, db: Session = Depends(get_db)):
         :param user_id: user's user_id.\n
         :param db: This field is not required.
     """
-    obj = crud.read_objective(db=db, user_id=user_id)
-    if obj is None:
-        default = {
-            "user_id": user_id,
-            "objectives": [],
-            "requirements": [],
-            "efforts": [],
-            "routines": [],
-        }
-        return default
-    else:
-        res = {
-            "objectives": obj.objectives,
-            "requirements": obj.requirements,
-            "efforts": obj.efforts,
-            "routines": obj.routines,
-        }
-        return res
+    try:
+        obj = crud.read_objective(db=db, user_id=user_id)
+        if obj is None:
+            default = {
+                "user_id": user_id,
+                "objectives": [],
+                "requirements": [],
+                "efforts": [],
+                "routines": [],
+            }
+            return default
+        else:
+            res = {
+                "objectives": obj.objectives,
+                "requirements": obj.requirements,
+                "efforts": obj.efforts,
+                "routines": obj.routines,
+            }
+            return res
+    except SQLAlchemyError as sql:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQL operation failed.": sql},
+        )

@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 import requests
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
-
+from sqlalchemy.exc import SQLAlchemyError
 from ..config.config import kakao_client, callback_url
 from ..database import Models, crud
 from ..database.conn import get_db
@@ -17,32 +17,43 @@ router = APIRouter(
 
 
 def kakao_signin(info, db):
-    kakao_account = info.get("kakao_account")
-    profile = kakao_account.get("profile")
+    try:
+        kakao_account = info.get("kakao_account")
+        profile = kakao_account.get("profile")
 
-    user_id = "KA" + str(info.get("id", None))
-    user = crud.read_user(db=db, user_id=user_id)
-    if user is not None:
-        return user.user_id, user.password
+        user_id = "KA" + str(info.get("id", None))
+        user = crud.read_user(db=db, user_id=user_id)
+        if user is not None:
+            return user.user_id, user.password
 
-    """name = profile.get("nickname", None)
-    gender = kakao_account.get("gender", None)
-    # email = kakao_account.get("email", None)"""
-    reg_date = datetime.now(tz=timezone.utc).astimezone()
-    acc_type = "KAKAO"
-    token = create_api_token(user_id)
+        """name = profile.get("nickname", None)
+        gender = kakao_account.get("gender", None)
+        # email = kakao_account.get("email", None)"""
+        reg_date = datetime.now(tz=timezone.utc).astimezone()
+        acc_type = "KAKAO"
+        token = create_api_token(user_id)
 
-    user_data = {
-        "user_id": user_id,
-        "register_date": reg_date,
-        "acc_type": acc_type,
-    }
+        user_data = {
+            "user_id": user_id,
+            "register_date": reg_date,
+            "acc_type": acc_type,
+        }
 
-    # user = Models.User(**user_data)
-    user_db = Models.UserFull(**user_data, password=token)
-    crud.create_user(db=db, user=user_db)
+        # user = Models.User(**user_data)
+        user_db = Models.UserFull(**user_data, password=token)
+        crud.create_user(db=db, user=user_db)
 
-    return user_id, token
+        return user_id, token
+    except KeyError as key:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"Key not found.": key},
+        )
+    except SQLAlchemyError as sql:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"SQL operation failed.": sql},
+        )
 
 
 """
