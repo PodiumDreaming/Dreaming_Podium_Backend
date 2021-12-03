@@ -61,7 +61,6 @@ async def create_objective(content: Models.Objectives, db: Session = Depends(get
         }
         obj = crud.read_objective(db=db, user_id=content.user_id)
         today = date.today()
-        print(today)
         if obj is None:
             record = crud.create_objective(db=db, obj=Models.Objectives(**new))
             sync_obj(user_id=content.user_id, wdate=today, routines=content.routines, db=db)
