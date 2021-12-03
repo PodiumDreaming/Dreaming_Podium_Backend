@@ -15,11 +15,10 @@ router = APIRouter(
 )
 
 
-def sync_obj(user_id: str, routines, db: Session):
+def sync_obj(user_id: str, wdate: date, routines, db: Session):
     # check if there is today's record.
     try:
-        today = date.today()
-        today_record = crud.read_tr(db=db, user_id=user_id, wdate=today, number=1)
+        today_record = crud.read_tr(db=db, user_id=user_id, wdate=wdate, number=1)
         # if so, synchronize updated routine data.
         if len(today_record) > 0:
             tr = today_record[0]
@@ -27,7 +26,7 @@ def sync_obj(user_id: str, routines, db: Session):
             for routine in routines:
                 new_r.update({routine: False})
             tr.content["routines"] = new_r
-            crud.update_tr(db=db, user_id=user_id, wdate=today, content=tr.content, feedback=tr.feedback)
+            crud.update_tr(db=db, user_id=user_id, wdate=wdate, content=tr.content, feedback=tr.feedback)
     except SQLAlchemyError as sql:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -61,15 +60,17 @@ async def create_objective(content: Models.Objectives, db: Session = Depends(get
             "routines": content.routines,
         }
         obj = crud.read_objective(db=db, user_id=content.user_id)
+        today = date.today()
+        print(today)
         if obj is None:
             record = crud.create_objective(db=db, obj=Models.Objectives(**new))
-            sync_obj(user_id=content.user_id, routines=content.routines, db=db)
+            sync_obj(user_id=content.user_id, wdate=today, routines=content.routines, db=db)
         else:
             # This will overwrite all attributes.
             crud.update_objective(db=db, obj=Models.Objectives(**new))
             record = new
             # synchronize data with record.
-            sync_obj(user_id=content.user_id, routines=content.routines, db=db)
+            sync_obj(user_id=content.user_id, wdate=today, routines=content.routines, db=db)
 
         return {"Status": "200OK",
                 "objective": record}

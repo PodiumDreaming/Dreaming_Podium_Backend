@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from ..database import Models, crud
 from app.database.conn import get_db
 from sqlalchemy.orm import Session
@@ -57,7 +57,7 @@ def initialize_c(user_id, wdate, db):
         crud.create_cr(cr=Models.Condition(**cr), db=db)
     except SQLAlchemyError as sql:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"SQL operation failed.": sql},
         )
 
