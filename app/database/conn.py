@@ -9,8 +9,8 @@ import pymysql
 RDS_Account = config.RDS_Account
 Local_Account = config.Local_Account
 Remote = config.Remote
-# db_url = f"mysql+pymysql://admin:{RDS_Account}@{Remote}:3306/MariaDB?charset=utf8mb4"
-db_url = f"mysql+pymysql://root:{Local_Account}@localhost:3306/dptest?charset=utf8mb4"
+db_url = f"mysql+pymysql://admin:{RDS_Account}@{Remote}:3306/MariaDB?charset=utf8mb4"
+# db_url = f"mysql+pymysql://root:{Local_Account}@localhost:3306/dptest?charset=utf8mb4"
 
 engine = create_engine(db_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
