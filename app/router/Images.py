@@ -50,7 +50,6 @@ async def upload_img(user_id: str, image_type: str, wdate,
     else:
         image_urls = []
         log = {}
-        partial_clear = False
         all_fail = len(files)
         for i in range(len(files)):
             # meta data of file
@@ -124,22 +123,16 @@ async def upload_img(user_id: str, image_type: str, wdate,
                     crud.update_tr(db=db, user_id=user_id, wdate=d, content=tr_content, feedback=tr.feedback)
                     log.update({f"file_{i}": "Success"})
 
-            except SQLAlchemyError as sql:
-                print(sql)
+            except SQLAlchemyError:
                 log.update({f"file_{i}": "Failed"})
-                partial_clear = True
                 all_fail -= 1
                 continue
-            except IndexError as index:
-                print(index)
+            except IndexError:
                 log.update({f"file_{i}": "Failed"})
-                partial_clear = True
                 all_fail -= 1
                 continue
-            except Exception as e:
-                print(e)
+            except Exception:
                 log.update({f"file_{i}": "Failed"})
-                partial_clear = True
                 all_fail -= 1
                 continue
     if all_fail == 0:

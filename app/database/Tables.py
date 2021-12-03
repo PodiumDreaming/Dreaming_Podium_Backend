@@ -57,7 +57,7 @@ class Objective(Base):
     __tablename__ = "Objective"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(String(256), ForeignKey("users.user_id"), primary_key=True)
+    user_id = Column(String(256), ForeignKey("users.user_id"))
     objectives = Column(MutableList.as_mutable(PickleType), default=[])
     requirements = Column(MutableList.as_mutable(PickleType), default=[])
     efforts = Column(MutableList.as_mutable(PickleType), default=[])

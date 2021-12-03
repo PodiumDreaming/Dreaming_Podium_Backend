@@ -63,6 +63,7 @@ async def create_objective(content: Models.Objectives, db: Session = Depends(get
         obj = crud.read_objective(db=db, user_id=content.user_id)
         if obj is None:
             record = crud.create_objective(db=db, obj=Models.Objectives(**new))
+            sync_obj(user_id=content.user_id, routines=content.routines, db=db)
         else:
             # This will overwrite all attributes.
             crud.update_objective(db=db, obj=Models.Objectives(**new))
@@ -73,7 +74,6 @@ async def create_objective(content: Models.Objectives, db: Session = Depends(get
         return {"Status": "200OK",
                 "objective": record}
     except SQLAlchemyError as sql:
-        print(sql)
         return {"Status": "DB error.",
                 "Detail": sql}
     except KeyError:

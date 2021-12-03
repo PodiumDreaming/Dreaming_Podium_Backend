@@ -57,7 +57,7 @@ def initialize_c(user_id, wdate, db):
         crud.create_cr(cr=Models.Condition(**cr), db=db)
     except SQLAlchemyError as sql:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"SQL operation failed.": sql},
         )
 
@@ -99,7 +99,10 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
         if d is None:
             raise ValueError
     except ValueError:
-        return {"Error": "Invalid value"}
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Value Error"
+        )
 
     try:
         tr_record = crud.read_tr(db=db, user_id=user_id, wdate=d, number=1)
@@ -139,15 +142,12 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
 
         # conditioning data update
         elif key_type == "mind":
-            print(content)
             cr.content["mind"] = content.get("content")
 
         elif key_type == "physical":
-            print(content)
             cr.content["physical"] = content.get("content")
 
         elif key_type == "injury":
-            print(content)
             cr.content["injury"] = content.get("content")
 
         crud.update_tr(db=db, user_id=user_id, content=tr.content, wdate=d, feedback=tr.feedback)
@@ -155,7 +155,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
 
     except SQLAlchemyError as sql:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail={"SQL operation failed.": sql},
         )
     except KeyError:
@@ -163,7 +163,7 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"KeyError": "key probably doesn't exist."}
         )
-    return {"status": "200OK"}
+    return {"status": status.HTTP_201_CREATED}
 
 
 # Read tr/cr record of given user_id and given date.

@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.router import KaKao, Record, Images, Profile, Objective, Apple
@@ -87,13 +86,14 @@ async def log_req(request: Request, call_next):
     if 200 <= status_code <= 300:
         req_log.info(msg)
     elif status_code >= 400:
-        err_log.error(msg)
+        # error is handled by exception handler
+        pass
     else:
         req_log.info(msg)
     return response
 
 
-"""@app.exception_handler(StarletteHTTPException)
+@app.exception_handler(StarletteHTTPException)
 async def leave_log(request: Request, exception):
     method = request.method
     user = request.client.host
@@ -103,7 +103,7 @@ async def leave_log(request: Request, exception):
     msg = f"{user}:{port} - [{method} {path} {scheme}] [{exception.status_code}]"
     err_log.error(msg)
     return JSONResponse(status_code=exception.status_code,
-                        content=exception.detail)"""
+                        content=exception.detail)
 
 
 @app.get("/")

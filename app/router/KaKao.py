@@ -73,7 +73,7 @@ async def deleter_user(user_id: str, db: Session = Depends(get_db)):
         return {"status": "200"}
 """
 
-"""
+
 @router.get("/kakao/login")
 async def kakao_login():
     auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={kakao_client}&redirect_uri={callback_url}&response_type=code"
@@ -94,7 +94,7 @@ async def get_token(code):
             detail="Failed to Authorization from Kakao",
             headers={"WWW-Authenticate": "Bearer"},
         )
-"""
+
 
 
 @router.post("/kakao/form")
