@@ -35,6 +35,6 @@ def get_s3():
     try:
         yield s3
     except ClientError:
-        print("s3 connection failed")
-    except Exception as e:
-        print(e)
+        pass
+    except Exception:
+        pass
