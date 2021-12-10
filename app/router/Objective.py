@@ -16,6 +16,14 @@ router = APIRouter(
 
 
 def sync_obj(user_id: str, wdate: date, routines, db: Session):
+    """
+    Function to synchronize object and training records.
+    :param user_id: user_id
+    :param wdate: written_date of record
+    :param routines: updated_routines
+    :param db: Database session
+    :return: None
+    """
     # check if there is today's record.
     try:
         today_record = crud.read_tr(db=db, user_id=user_id, wdate=wdate, number=1)

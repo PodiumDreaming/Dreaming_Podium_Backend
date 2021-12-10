@@ -75,13 +75,13 @@ async def write(user_id: str, wdate: str, key_type: str, content: Union[str, dic
      - Date of the record. Must be something like 'Fri Nov 05 2021'\n
     :param key_type: str\n
      - Identifier of Updating part of the record. key_type must be one of:\n
-        "train_detail" :
-        "routines" :
-        "success" :
-        "failure":
-        "feedback":
-        "mind"
-        "physical"
+        "train_detail"\n
+        "routines"\n
+        "success"\n
+        "failure"\n
+        "feedback"\n
+        "mind"\n
+        "physical"\n
         "injury"\n
     :param content: Writing content\n
     content: Updating value.\n
@@ -274,6 +274,7 @@ async def read(user_id: str, wdate: str, db: Session = Depends(get_db), token=He
             )
 
 
+# API for testing
 @router.get("/token_test")
 async def test(user_id: str, token=Header(..., title="API_Token")):
     if not token_verification(token, user_id):

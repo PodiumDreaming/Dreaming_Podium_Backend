@@ -19,6 +19,9 @@ class User(BaseModel):
 
 
 class UserFull(User):
+    """
+    password: API_Token
+    """
     password: str
 
 
