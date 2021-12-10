@@ -44,6 +44,10 @@ def init_app():
 
 
 def init_logger():
+    """
+    initialize logger for Request logging.
+    :return: logger fot logging request and logger for logging error.
+    """
     req_logger = logging.getLogger("Request")
     req_logger.setLevel(logging.INFO)
     err_logger = logging.getLogger("Error")
@@ -69,6 +73,13 @@ req_log, err_log = init_logger()
 
 @app.middleware("http")
 async def log_req(request: Request, call_next):
+    """
+    Middleware that executes before and after request gets handled.
+    :param request:
+    :param call_next: Called API.
+    :return:
+    """
+    # set log information
     start_time = time.time()
     method = request.method
     user = request.client.host
@@ -84,6 +95,7 @@ async def log_req(request: Request, call_next):
     msg = f"{user}:{port} - [{method} {path} {scheme}] [{status_code}]: {process_time_f}"
 
     if 200 <= status_code <= 300:
+        # Record log.
         req_log.info(msg)
     elif status_code >= 400:
         # error is handled by exception handler
@@ -95,12 +107,20 @@ async def log_req(request: Request, call_next):
 
 @app.exception_handler(StarletteHTTPException)
 async def leave_log(request: Request, exception):
+    """
+    Overriding exception handler to leave log.
+    :param request:
+    :param exception:
+    :return:
+    """
+    # set log information
     method = request.method
     user = request.client.host
     port = request.client.port
     path = request.url.path
     scheme = request.url.scheme
     msg = f"{user}:{port} - [{method} {path} {scheme}] [{exception.status_code}]"
+    # Record log.
     err_log.error(msg)
     return JSONResponse(status_code=exception.status_code,
                         content=exception.detail)
