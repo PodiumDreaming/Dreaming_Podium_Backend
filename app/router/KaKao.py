@@ -56,7 +56,6 @@ def kakao_signin(info, db):
         )
 
 
-"""
 @router.get("/kakao/me", response_model=Models.User)
 async def get_user(user_id: str, db: Session = Depends(get_db)):
     current_user = crud.read_user(db, user_id)
@@ -71,7 +70,6 @@ async def deleter_user(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Could not find user")
     else:
         return {"status": "200"}
-"""
 
 
 @router.get("/kakao/login")
@@ -94,7 +92,6 @@ async def get_token(code):
             detail="Failed to Authorization from Kakao",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
 
 
 @router.post("/kakao/form")
