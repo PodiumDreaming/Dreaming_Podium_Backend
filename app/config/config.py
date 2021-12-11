@@ -1,7 +1,7 @@
 import os
 
 # KAKAO API
-kakao_client = "6d1ba54d793cd90f64f3a4e84bbea36e"
+kakao_client = os.getenv("kakao_client")
 callback_url = "http://localhost:8000/kakao/callback"
 
 # AWS RDS CONNECTION
