@@ -19,7 +19,7 @@ Abstract
 체계적이고 효과적으로 훈련 내용, 부상, 컨디셔닝을 관리할 수 있도록 도와주는 모바일 어플리케이션입니다.   
 이 버전은 현재 '구글 플레이스토어'와 '앱스토어' 모두 릴리즈 되었으며, 이 레포지토리에는 클라이언트에서 필요한 데이터를 주고 받는 백엔드 구축 내용이 담겨있습니다.  
 백엔드는 정민혁이 담당하였고 관리하고 있습니다.   
-프런트엔드에 관한 내용은 여기서 확인할 수 있습니다: [Click Here][front_link]
+#### 프런트엔드에 관한 내용은 여기서 확인할 수 있습니다: [Click Here][front_link]
 
 [front_link]: https://github.com/PodiumDreaming/dreamingPodium-front "프런트 엔드 깃허브"
 
@@ -27,7 +27,7 @@ Quick and easy way to write trainging repoert.
 Wright is a mobile application that helps manage training, injury, conditioning records in a systematic and effeective manner.   
 This version is currently released both on 'Google Play Store' and 'App Store', and this repository contains all information about backend that handles data client needs.  
 Backend part is made and managed by Minhyeok Jeong.   
-You can check frontend here: [Click Here][front_link]
+#### You can check frontend here: [Click Here][front_link]
 
 ***
 
