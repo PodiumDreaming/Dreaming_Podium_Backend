@@ -203,7 +203,7 @@ db_url = f"mysql+pymysql://admin:{RDS_Account}@{Remote}:3306/MariaDB?charset=utf
 > 5.5.4 You may have to open port depending on the database you use.   
 > 5.5.5 Change "dptest" to the name of your database.   
 >   > e.g. db_url = "mysql+pymysql://{user}:{password}@localhost:{port}/{database}?charset=utf8mb4"
-6. Run server
+6. **Run server**
 ```
 uvicorn main:app --reload
 

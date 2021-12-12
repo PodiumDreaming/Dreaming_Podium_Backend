@@ -9,7 +9,7 @@ from ..util import convert_date, token_verification, create_api_token
 
 router = APIRouter(
     prefix="/record",
-    tags=["기록"],
+    tags=["Record"],
     dependencies=[],
 )
 

@@ -10,13 +10,26 @@ import time
 import logging
 
 
-def init_app():
+def init_app(description):
     """
     메인 함수 - 앱 실행
     :return:
     app
     """
-    app = FastAPI()
+    app = FastAPI(
+        title="Wright Backend",
+        description=description,
+        version="1.0.1",
+        terms_of_service="https://blog.naver.com/PostView.naver?blogId=sujinju0311&logNo=222583009802&proxyReferer=",
+        contact={
+            "name": "Github",
+            "url": "https://github.com/PodiumDreaming/Dreaming_Podium_Backend",
+            "email": "jeongmh09@naver.com",
+        },
+        license_info={
+            "name": "MIT License",
+        },
+    )
     app.include_router(KaKao.router)
     app.include_router(Apple.router)
     app.include_router(Profile.router)
@@ -67,7 +80,50 @@ def init_logger():
     return req_logger, err_logger
 
 
-app = init_app()
+description = """
+Wright API Server. 🚀
+
+## KaKao
+
+You can **Test Login with KaKao Account**.
+
+## Apple
+
+You can **Test Login with Apple Account**.
+
+## Profile
+
+You will be able to:
+
+* **Create Profile**.
+* **Read Profile**.
+* **Update Profile**.
+
+## Objective
+
+You will be able to:
+
+* **Create Objective**.
+* **Read Objective**/
+* **Update Objective**.
+
+## Image Upload
+
+You will be able to:
+
+* **Upload Image to S3**.
+* **Delete Image Url**.
+
+## Record
+
+You will be able to:
+
+* **Create Record**.
+* **Read Record**/
+* **Read your API_Token**.
+* **Test if your API_Token is valid.
+"""
+app = init_app(description=description)
 req_log, err_log = init_logger()
 
 

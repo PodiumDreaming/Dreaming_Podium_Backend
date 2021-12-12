@@ -10,7 +10,7 @@ from ..database import Models
 
 router = APIRouter(
     prefix="/objective",
-    tags=["목표설정"],
+    tags=["Objective"],
     dependencies=[],
 )
 

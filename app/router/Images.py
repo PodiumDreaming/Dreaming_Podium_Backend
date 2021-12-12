@@ -14,7 +14,7 @@ from .Record import initialize_t, initialize_c
 
 router = APIRouter(
     prefix="/images",
-    tags=["이미지 업로드"],
+    tags=["Image Upload"],
     dependencies=[],
 )
 

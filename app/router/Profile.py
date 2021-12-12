@@ -8,7 +8,7 @@ from app.util import convert_date
 
 router = APIRouter(
     prefix="/profile",
-    tags=["프로필"],
+    tags=["Profile"],
     dependencies=[],
 )
 
