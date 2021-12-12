@@ -49,7 +49,7 @@ For more detail, refer report in the repo.
 
 About FastAPI
 -------------
-
+![FastAPI](https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png)
 FastAPI는 파이썬 언어의 3.6버전이상의 API를 빌드하기 위한 파이썬 기반의 웹 프레임워크입니다.   
 빠른 속도와 쉽게 배울수 있다는 장점으로 사용률이 증가하고 있는 추세입니다.   
 본 프로젝트에서는 RESTful API를 통한 CRUD작업을 처리하기 위한 환경 구축을 위해 사용되었습니다.    
