@@ -8,7 +8,7 @@ Mobile App 'Wright' Backend Server using FastAPI
 Team Member
 -----------
 #### 경희대학교 컴퓨터공학과
-2017104024 정민혁 jeongmh09@naver.com   
+2017104024 정민혁 jeongmh09@naver.com / jeongmh09@gmail.com  
 2018103062 정지현 jihyoun0602@gmail.com   
 
 ***
@@ -117,13 +117,13 @@ Handles image upload to AWS S3 bucket.
 카카오 계정을 통한 로그인을 처리합니다.
 Handles login by KaKao
 #### Objectives.py
-목표 설정에 관한 함수들이 정의된 파일입니다.
+목표 설정에 관한 함수들이 정의된 파일입니다.   
 Defines functions related to Objective configuration.
 #### Profile.py
-사용자 프로필에 관한 함수들이 정의된 파일입니다.
+사용자 프로필에 관한 함수들이 정의된 파일입니다.   
 Defines functions related to User Profile.
 #### Record.py
-트레이닝, 컨디셔닝 기록에 관한 함수들이 정의된 파일입니다.
+트레이닝, 컨디셔닝 기록에 관한 함수들이 정의된 파일입니다.   
 Defomes functions related to Training and Conditioning.   
 
 ***
